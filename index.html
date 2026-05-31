@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta
       name="description"
-      content="브라우저 확장, 렌더링 엔진, macOS 입력기, AI provider, Android/Linux 런타임 프로젝트를 통해 문제 해결 방식을 소개하는 박찬우 소프트웨어 엔지니어 포트폴리오입니다."
+      content="브라우저 확장, 렌더링 엔진, macOS 입력기, AI provider, 로컬 LLM, Android/Linux 런타임, 데이터 파이프라인 프로젝트를 통해 문제 해결 방식을 소개하는 박찬우 소프트웨어 엔지니어 포트폴리오입니다."
     />
     <meta property="og:title" content="박찬우 — Software Engineer Portfolio" />
     <meta
@@ -61,7 +61,7 @@
           </h1>
           <p class="hero-lede">
             안녕하세요, 소프트웨어 엔지니어 박찬우입니다. 브라우저 확장부터 macOS 네이티브 입력기,
-            AI provider 어댑터, Android 안의 Linux 런타임까지 서로 다른 환경의 제약을 읽고
+            AI provider 어댑터, 로컬 LLM 추론 서버, Android 안의 Linux 런타임, 데이터 파이프라인까지 서로 다른 환경의 제약을 읽고
             오래 유지할 수 있는 구조로 정리하는 일을 좋아합니다.
           </p>
           <div class="hero-actions" aria-label="주요 행동">
@@ -90,11 +90,11 @@
           </div>
           <dl class="proof-grid">
             <div>
-              <dt>26</dt>
+              <dt>27</dt>
               <dd>살펴본 저장소</dd>
             </div>
             <div>
-              <dt>10</dt>
+              <dt>12</dt>
               <dd>대표 공개 레포</dd>
             </div>
             <div>
@@ -117,6 +117,7 @@
         <p>
           화면의 움직임이 자연스러운지 보는 동시에, 그 뒤에서 상태와 캐시, provider, 런타임이 어떻게 맞물리는지도 함께 봅니다.
           TypeScript, Swift, Python, C++, Kotlin을 오가며 여러 플랫폼의 경계에서 생기는 문제를 다뤄 왔습니다.
+          대표 저장소는 직접 구현한 흐름이 분명하고, 면접에서 설계 의도를 설명할 수 있는 프로젝트 중심으로 골랐습니다.
         </p>
       </section>
 
@@ -216,9 +217,9 @@
               <span>ML Runtime</span>
               <a href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">MLX-Swift</a>
             </div>
-            <h3>공개 fork 기반 MLX/VLM 호환성 실험</h3>
+            <h3>MLX/VLM 런타임 호환성 실험</h3>
             <p>
-              MLX-Swift, mlx-swift-lm, mlx-vlm 공개 fork를 기반으로 모델 로드, 멀티모달 입력,
+              MLX-Swift, mlx-swift-lm, mlx-vlm 계열 코드에서 모델 로드, 멀티모달 입력,
               KV cache, OpenAI/Ollama 호환 API가 이어지는 경로를 분석하고 확장해 본 실험입니다.
             </p>
             <ul class="tag-row">
@@ -247,6 +248,126 @@
               <li>Rootfs</li>
             </ul>
             <a class="project-detail-link" href="projects/plib/">
+              자세히 보기
+            </a>
+          </article>
+
+          <article class="project-card liquid-glass lg-interactive" data-detail-href="projects/gemini-writing-copilot/" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":28}'>
+            <div class="project-topline">
+              <span>Developer Tooling</span>
+              <a href="https://github.com/Meapri/gemini-writing-copilot" target="_blank" rel="noreferrer">Gemini Writing Copilot</a>
+            </div>
+            <h3>글쓰기 작업을 분리한 Codex 플러그인</h3>
+            <p>
+              Codex 안의 문장 작성 작업을 Gemini/Antigravity로 라우팅하는 개인 플러그인입니다.
+              작업 유형, 스타일 프로필, project context, quality gate를 조합해 코드 작업과 글쓰기 작업의 책임을 분리했습니다.
+            </p>
+            <ul class="tag-row">
+              <li>Python</li>
+              <li>Plugin</li>
+              <li>Quality Gate</li>
+            </ul>
+            <a class="project-detail-link" href="projects/gemini-writing-copilot/">
+              자세히 보기
+            </a>
+          </article>
+
+          <article class="project-card liquid-glass lg-interactive" data-detail-href="projects/androlinux-runtime-lab/" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":28}'>
+            <div class="project-topline">
+              <span>Android Runtime</span>
+              <a href="https://github.com/Meapri/androlinux-runtime-lab" target="_blank" rel="noreferrer">androlinux-runtime-lab</a>
+            </div>
+            <h3>Android 앱 내부의 Linux 런타임 랩</h3>
+            <p>
+              manifest 검증, 안전한 rootfs 추출, packaged PRoot 실행, EGL/GLES 진단을 나누어
+              Android 샌드박스 안에서 Linux 실행 환경을 어떻게 세울지 검증한 프로젝트입니다.
+            </p>
+            <ul class="tag-row">
+              <li>Kotlin</li>
+              <li>NDK</li>
+              <li>PRoot</li>
+            </ul>
+            <a class="project-detail-link" href="projects/androlinux-runtime-lab/">
+              자세히 보기
+            </a>
+          </article>
+
+          <article class="project-card liquid-glass lg-interactive" data-detail-href="projects/gemma4-mtp-server/" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":28}'>
+            <div class="project-topline">
+              <span>Local LLM Server</span>
+              <a href="https://github.com/Meapri/gemma4-swift-mtp-server" target="_blank" rel="noreferrer">Gemma4 Swift MTP</a>
+            </div>
+            <h3>MLX 모델을 위한 Swift 추론 서버</h3>
+            <p>
+              Gemma4 MTP와 Qwen DFlash draft path를 OpenAI 호환 HTTP/SSE API로 감싼 서버입니다.
+              draft token 검증과 on-demand proxy를 함께 다뤄 로컬 모델 실행 비용을 낮추는 방향으로 설계했습니다.
+            </p>
+            <ul class="tag-row">
+              <li>Swift</li>
+              <li>MLX</li>
+              <li>SSE</li>
+            </ul>
+            <a class="project-detail-link" href="projects/gemma4-mtp-server/">
+              자세히 보기
+            </a>
+          </article>
+
+          <article class="project-card liquid-glass lg-interactive" data-detail-href="projects/mlx-swift-mtp/" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":28}'>
+            <div class="project-topline">
+              <span>ML Framework</span>
+              <a href="https://github.com/Meapri/mlx-swift-lm-gemma4-mtp" target="_blank" rel="noreferrer">mlx-swift-lm-gemma4-mtp</a>
+            </div>
+            <h3>Gemma4와 DFlash를 위한 MLX Swift 확장</h3>
+            <p>
+              단순 보관용 저장소로 남기지 않고 Gemma4 assistant, DFlash draft model, Qwen3.5 계열 등록과
+              tool parser를 추가해 Swift 기반 로컬 LLM 실험의 하위 계층을 확장했습니다.
+            </p>
+            <ul class="tag-row">
+              <li>Swift</li>
+              <li>Gemma4</li>
+              <li>DFlash</li>
+            </ul>
+            <a class="project-detail-link" href="projects/mlx-swift-mtp/">
+              자세히 보기
+            </a>
+          </article>
+
+          <article class="project-card liquid-glass lg-interactive" data-detail-href="projects/libhangul-core/" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":28}'>
+            <div class="project-topline">
+              <span>Input Method Core</span>
+              <a href="https://github.com/Meapri/libhangul-linux" target="_blank" rel="noreferrer">libhangul Swift/Linux</a>
+            </div>
+            <h3>한글 조합과 한자 검색을 다루는 Swift 코어</h3>
+            <p>
+              초중종성 조합, backspace 분해, Unicode 정규화, IME 동기 콜백을 고려한 thread-safe wrapper,
+              sorted-array trie 기반 한자 검색을 Swift로 정리한 입력기 코어입니다.
+            </p>
+            <ul class="tag-row">
+              <li>Swift</li>
+              <li>Hangul</li>
+              <li>Trie</li>
+            </ul>
+            <a class="project-detail-link" href="projects/libhangul-core/">
+              자세히 보기
+            </a>
+          </article>
+
+          <article class="project-card liquid-glass lg-interactive" data-detail-href="projects/event-log-pipeline/" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":28}'>
+            <div class="project-topline">
+              <span>Data Engineering</span>
+              <a href="https://github.com/Meapri/Test_PCW_2026" target="_blank" rel="noreferrer">Test_PCW_2026</a>
+            </div>
+            <h3>재현 가능한 이벤트 로그 파이프라인</h3>
+            <p>
+              Docker Compose로 PostgreSQL과 Python 분석 앱을 묶고, deterministic event generation,
+              idempotent load, SQL aggregate, dashboard export까지 한 번에 검증한 데이터 파이프라인입니다.
+            </p>
+            <ul class="tag-row">
+              <li>Python</li>
+              <li>PostgreSQL</li>
+              <li>Docker</li>
+            </ul>
+            <a class="project-detail-link" href="projects/event-log-pipeline/">
               자세히 보기
             </a>
           </article>
@@ -280,8 +401,8 @@
             <p>NDK, C/C++, Kotlin, app-private rootfs, runtime launch plan, JNI diagnostics, clean-room notes</p>
           </div>
           <div>
-            <h3>검증 가능한 개발 흐름</h3>
-            <p>PostgreSQL schema, Python pipeline, focused tests, architecture notes, GitHub Actions deployment</p>
+            <h3>로컬 AI와 데이터 파이프라인</h3>
+            <p>MLX Swift, MTP draft verification, OpenAI-compatible SSE, PostgreSQL schema, deterministic Python pipeline</p>
           </div>
         </div>
         <ul class="stack-cloud" aria-label="주요 기술 스택">
@@ -299,6 +420,8 @@
           <li>NDK</li>
           <li>FastAPI</li>
           <li>PostgreSQL</li>
+          <li>Docker</li>
+          <li>Gemini Plugin</li>
         </ul>
       </section>
 
@@ -336,6 +459,8 @@
             <div><span>HangulComposer.swift</span><strong>한글 조합 상태와 앱별 입력 예외 처리</strong></div>
             <div><span>google_antigravity_adapter.py</span><strong>provider 응답과 tool-call 이벤트 정규화</strong></div>
             <div><span>runtime_report.cpp</span><strong>Android JNI 진단과 런타임 진입 확인</strong></div>
+            <div><span>Gemma4Assistant.swift</span><strong>draft token과 target KV 상태를 연결한 MLX 확장</strong></div>
+            <div><span>db.py</span><strong>재시도와 batch insert를 갖춘 데이터 적재 흐름</strong></div>
           </div>
         </div>
       </section>

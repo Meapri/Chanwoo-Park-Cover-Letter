@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="description" content="MLX-Swift, mlx-swift-lm, mlx-vlm 계열 코드에서 모델 로드, 멀티모달 입력, OpenAI/Ollama 호환성을 분석한 실험입니다." />
-    <title>MLX/VLM Experiments — 런타임 호환성 분석</title>
+    <meta name="description" content="Gemma4 assistant, DFlash draft model, Qwen3.5 등록을 추가한 MLX Swift 확장 프로젝트입니다." />
+    <title>mlx-swift-lm-gemma4-mtp — Gemma4와 DFlash를 위한 MLX Swift 확장</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
@@ -36,65 +36,67 @@
         <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트로 돌아가기</a>
         <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32}'>
           <div class="detail-meta">
-            <span>ML Runtime</span>
-            <a class="detail-action" href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">소스 보기</a>
+            <span>ML Framework</span>
+            <a class="detail-action" href="https://github.com/Meapri/mlx-swift-lm-gemma4-mtp" target="_blank" rel="noreferrer">소스 보기</a>
           </div>
-          <h1>MLX/VLM Experiments: 로컬 ML 런타임 호환성의 경계를 읽은 실험</h1>
+          <h1>mlx-swift-lm-gemma4-mtp: 최신 로컬 LLM 실험을 위한 MLX Swift 하위 계층 확장</h1>
           <p>
-            이 작업은 MLX-Swift, mlx-swift-lm, mlx-vlm 계열 코드를 바탕으로 진행한 분석과 확장 실험입니다.
-            원저작 프로젝트의 성과와 경계를 분명히 두고, 모델 로드 계획, 멀티모달 입력, KV cache, OpenAI/Ollama 호환 API가 어떻게 이어지는지 정리했습니다.
+            mlx-swift-lm-gemma4-mtp는 MLX Swift 기반 로컬 LLM 실험을 위해 모델 등록과 draft 모델 경로를 확장한 프로젝트입니다.
+            단순히 upstream을 보관한 저장소가 아니라, Gemma4 MTP assistant와 DFlash draft model, Qwen3.5 계열 로딩 경로를 Swift 코드로 연결했습니다.
           </p>
           <div class="detail-summary-grid">
             <div class="detail-fact">
               <span>마주한 문제</span>
-              <strong>로컬 AI 런타임과 외부 API 규격의 간격</strong>
-              <p>모델 로드, tokenizer, 멀티모달 입력, KV cache, streaming 응답이 각각 다른 계층에서 맞물립니다.</p>
+              <strong>새 모델 구조가 Swift 런타임에 바로 올라오지 않는 상황</strong>
+              <p>config 구조, model type, KV cache, tool-call 형식이 모델마다 달라 upstream 기본 경로만으로는 실험하기 어렵습니다.</p>
             </div>
             <div class="detail-fact">
               <span>설계 방향</span>
-              <strong>원본 구조를 존중하는 호환성 계층 실험</strong>
-              <p>기존 런타임 흐름을 따라가며 OpenAI/Ollama 호환 타입과 SSE streaming 경로를 실험했습니다.</p>
+              <strong>모델 등록과 draft path를 명시적으로 확장</strong>
+              <p>LLMModelFactory에 새 model type을 등록하고, target hidden과 shared KV를 draft model로 넘기는 경로를 만들었습니다.</p>
             </div>
             <div class="detail-fact">
               <span>확인한 결과</span>
-              <strong>VLM 입력부터 응답 streaming까지의 연결</strong>
-              <p>QwenVL prompt/image planning, embedding merge, generation plan, SSE streaming이 이어지는 지점을 확인했습니다.</p>
+              <strong>서버 프로젝트가 의존할 수 있는 Swift 패키지</strong>
+              <p>Gemma4 Swift MTP Server가 이 패키지를 의존성으로 삼아 실제 server-side generation path를 구성합니다.</p>
             </div>
           </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
-                <li><code>MLXVLMCore</code>의 ModelLoadPlanner, GenerationRuntimePlan, GenerationSamplingPlan을 따라 추론 준비 과정을 읽었습니다.</li>
-                <li>QwenVLPromptBuilder, QwenVLImageInputPlanner, QwenVLEmbeddingMerge 경로에서 멀티모달 입력이 합쳐지는 방식을 확인했습니다.</li>
-                <li>CLI에서 tokenize/detokenize, OpenAI chat/completions/responses, Ollama generate/chat/embed, SSE streaming과 KV cache 경로를 실험했습니다.</li>
+                <li><code>LLMModelFactory.swift</code>에 <code>gemma4</code>, <code>gemma4_assistant</code>, <code>dflash_draft</code>, <code>qwen3_5</code> 계열을 등록했습니다.</li>
+                <li><code>Gemma4Assistant.swift</code>는 target model의 embedding과 shared KV state를 받아 draft token block을 생성합니다.</li>
+                <li><code>DFlashDraft.swift</code>는 mask token, target layer id, target hidden conditioning, cache update를 Swift 모델로 옮겼습니다.</li>
+                <li><code>Tool/Parsers</code> 계층에는 Gemma와 Qwen3.5 계열의 tool-call 형식 처리가 추가되어 agent 호환성을 넓힙니다.</li>
               </ul>
             </div>
             <div class="detail-block">
               <h4>살펴볼 파일</h4>
               <ul class="evidence-list detail-evidence">
-                <li><code>Sources/MLXVLMCore</code></li>
-                <li><code>Sources/MLXVLMCli/main.swift</code></li>
-                <li><code>mlx-swift-lm / mlx-vlm experiments</code></li>
+                <li><code>Libraries/MLXLLM/Models/Gemma4.swift</code></li>
+                <li><code>Libraries/MLXLLM/Models/Gemma4Assistant.swift</code></li>
+                <li><code>Libraries/MLXLLM/Models/DFlashDraft.swift</code></li>
+                <li><code>Libraries/MLXLLM/LLMModelFactory.swift</code></li>
               </ul>
             </div>
           </div>
           <div class="detail-narrative">
             <section class="detail-narrative-section">
               <h4>왜 중요한가</h4>
-              <p>로컬 AI 런타임은 모델을 실행하는 것만으로 끝나지 않습니다. 외부 앱이 기대하는 API 형태, 멀티모달 입력 전처리, streaming 응답, cache 상태가 함께 맞아야 실제 도구로 쓸 수 있습니다.</p>
+              <p>로컬 LLM 실험은 표면 API보다 하위 모델 계층에서 자주 막힙니다. 새 아키텍처를 Swift 런타임에 맞게 읽고 연결해야 서버와 앱이 그 위에 설 수 있습니다.</p>
             </section>
             <section class="detail-narrative-section">
               <h4>어떻게 읽으면 좋은가</h4>
-              <p><code>MLXVLMCore</code>에서 모델 로드와 generation plan을 먼저 따라가고, QwenVL 계층에서 이미지 입력이 프롬프트와 임베딩으로 합쳐지는 흐름을 보면 좋습니다. 이후 CLI와 호환 API 타입을 보면 서버 경계가 드러납니다.</p>
+              <p>모델 factory 등록에서 시작해 Gemma4 target model, assistant drafter, DFlash draft model 순서로 따라가면 MTP 서버가 왜 이 확장 패키지를 필요로 하는지 보입니다.</p>
             </section>
             <section class="detail-narrative-section">
               <h4>엔지니어링 관점</h4>
-              <p>낯선 오픈소스 코드베이스를 빠르게 읽고, 기존 구조를 존중하면서 필요한 호환성 실험을 진행한 경험입니다. AI 런타임 내부와 제품 API 경계를 함께 이해하는 역량을 보여줍니다.</p>
+              <p>upstream을 단순히 가져오는 데서 멈추지 않고, 새 모델의 구조와 Swift 타입 시스템 사이를 맞춘 작업입니다. 모델 내부 구현을 제품 API와 연결하는 기반 경험입니다.</p>
             </section>
           </div>
           <div class="detail-actions">
-            <a class="primary-action" href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">실험 코드 보기</a>
+            <a class="primary-action" href="https://github.com/Meapri/mlx-swift-lm-gemma4-mtp" target="_blank" rel="noreferrer">MLX 확장 보기</a>
             <a class="secondary-action" href="../../#projects">다른 프로젝트</a>
           </div>
         </article>

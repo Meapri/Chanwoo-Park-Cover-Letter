@@ -8,6 +8,12 @@ const projectPages = [
   'hermes-antigravity',
   'mlx-vlm',
   'plib',
+  'gemini-writing-copilot',
+  'androlinux-runtime-lab',
+  'gemma4-mtp-server',
+  'mlx-swift-mtp',
+  'libhangul-core',
+  'event-log-pipeline',
 ];
 
 export default defineConfig({

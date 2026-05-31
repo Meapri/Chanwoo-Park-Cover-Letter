@@ -1,7 +1,7 @@
 # Chanwoo Park - Liquid Glass Portfolio
 
 박찬우의 GitHub Pages 포트폴리오이자, 웹용 Liquid Glass 엔진을 실제 페이지에 적용한 데모 저장소입니다.
-브라우저 확장, 렌더링 엔진, macOS 입력기, AI provider 어댑터, 로컬 AI 런타임, Android/Linux 실행 환경처럼 서로 다른 플랫폼의 제약을 다룬 프로젝트를 한곳에서 볼 수 있도록 구성했습니다.
+브라우저 확장, 렌더링 엔진, macOS 입력기, AI provider 어댑터, 로컬 AI 런타임, Android/Linux 실행 환경, 데이터 파이프라인처럼 서로 다른 플랫폼의 제약을 다룬 프로젝트를 한곳에서 볼 수 있도록 구성했습니다.
 
 Live: [https://meapri.github.io/Chanwoo-Park-Cover-Letter/](https://meapri.github.io/Chanwoo-Park-Cover-Letter/)
 
@@ -15,6 +15,8 @@ Live: [https://meapri.github.io/Chanwoo-Park-Cover-Letter/](https://meapri.githu
 홈 화면은 프로젝트를 넓게 소개하고, 각 프로젝트 카드는 별도 상세 페이지로 이동합니다.
 상세 페이지는 문제 상황, 설계 방향, 구현 포인트, 주요 파일, 엔지니어링 관점을 같은 형식으로 정리해 코드베이스를 읽기 쉽게 만듭니다.
 
+프로젝트 선정은 공개 저장소 전체를 훑은 뒤, 백업성 저장소나 원본 대비 변화가 적은 단순 보관 fork는 제외하고 직접 구현한 구조가 분명한 저장소 위주로 구성했습니다.
+
 ## Featured Projects
 
 | Project | What It Shows |
@@ -23,8 +25,14 @@ Live: [https://meapri.github.io/Chanwoo-Park-Cover-Letter/](https://meapri.githu
 | liquid-glass-web | SVG filter, WebGL refraction, displacement/specular map, 자동 profile을 조합한 웹 Liquid Glass 엔진 |
 | PriType-Swift | macOS InputMethodKit과 libhangul을 연결해 한글 조합 상태, 후보창, 앱별 입력 예외를 다루는 네이티브 IME |
 | Hermes Antigravity | Google Antigravity provider를 Hermes 흐름에 연결하며 streaming event, tool-call id, schema 차이를 정규화하는 Python 어댑터 |
-| MLX/VLM Experiments | MLX-Swift 계열 공개 fork를 읽고 모델 로드, 멀티모달 입력, KV cache, OpenAI/Ollama 호환 API 경계를 분석한 실험 |
+| MLX/VLM Experiments | MLX-Swift 계열 코드에서 모델 로드, 멀티모달 입력, KV cache, OpenAI/Ollama 호환 API 경계를 분석한 실험 |
 | Plib | Android app-private 공간에서 Linux/glibc arm64 런타임, rootfs 설치, JNI 진단, EGL/GLES bridge를 나누어 검증한 실험 |
+| Gemini Writing Copilot | Codex의 글쓰기 요청을 Gemini/Antigravity로 라우팅하며 task/profile/project context/quality gate를 조합하는 개인 플러그인 |
+| AndroLinux Runtime Lab | Android 앱 전용 공간에서 manifest 검증, 안전한 rootfs 추출, packaged PRoot 실행, EGL/GLES 진단을 나누어 검증한 Kotlin/NDK 랩 |
+| Gemma4 Swift MTP Server | MLX 모델을 OpenAI 호환 HTTP/SSE API로 감싸고 Gemma4 MTP, Qwen DFlash draft path, on-demand backend proxy를 다루는 Swift 서버 |
+| mlx-swift-lm-gemma4-mtp | Gemma4 assistant, DFlash draft model, Qwen3.5 계열 등록과 tool parser를 추가한 MLX Swift 확장 |
+| LibHangul Swift/Linux | 한글 조합 상태 머신, backspace 분해, Unicode 정규화, thread-safe IME wrapper, sorted-array Hanja Trie를 담은 Swift 입력기 코어 |
+| Event Log Pipeline | deterministic event generation, PostgreSQL 적재, SQL aggregate, dashboard export를 Docker Compose로 묶은 데이터 파이프라인 |
 
 ## Tech Stack
 
@@ -34,6 +42,8 @@ Live: [https://meapri.github.io/Chanwoo-Park-Cover-Letter/](https://meapri.githu
 | Vite | 로컬 개발 서버, GitHub Pages용 정적 빌드 |
 | CSS | 반응형 레이아웃, 배경 장면, 타이포그래피, fallback 스타일 |
 | SVG / WebGL | `feDisplacementMap`, refraction, displacement/specular map 렌더링 |
+| Python / PostgreSQL | 이벤트 로그 생성, 적재, SQL 집계, dashboard export |
+| Swift / MLX | 로컬 LLM 모델 로딩, MTP draft verification, OpenAI 호환 SSE 서버 |
 | GitHub Actions | `npm ci` → `typecheck` → `build` → GitHub Pages 배포 |
 
 ## Liquid Glass Engine
