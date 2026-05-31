@@ -75,6 +75,8 @@ npm test               # typecheck + auto-profile/auto-quality 테스트
 - `LiquidGlass`는 요소 크기, radius, DPR, profile/preset 설정을 기준으로 displacement/specular map을 생성합니다.
 - `AutoProfile`은 요소 역할과 크기에서 `bar`, `control`, `card`, `panel`, `selection` 계열 프로파일을 해석합니다.
 - `DeviceProfile`과 `quality: "auto"` 흐름은 모바일과 Android 같은 환경에서 고비용 효과를 조정합니다.
+- `MapRaster`, `MapWorker`, `MapWorkerClient`는 displacement/specular map 생성을 worker 경로로 분리해 런타임 부하를 줄입니다.
+- `ObserverRegistry`는 resize/intersection observer를 공유해 많은 glass 요소가 있을 때 관찰 비용을 낮춥니다.
 - `WebGLRefractor`와 SVG filter 경로는 가능한 환경에서 굴절감을 보강하고, 지원이 약한 환경에서는 안전하게 내려갑니다.
 - `MapCache`는 같은 크기의 요소가 동일한 맵을 재사용하게 해 초기화 비용을 줄입니다.
 - 이 포트폴리오에서는 과한 pointer tilt를 끄고, 클릭 가능한 요소의 glass highlight와 포커스 상태만 유지합니다.

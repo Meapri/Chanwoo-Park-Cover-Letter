@@ -37,6 +37,7 @@ import { registerPointerLight, unregisterPointerLight } from './PointerField';
 import { getWebGLRefractor } from './WebGLRefractor';
 import type { RefractorBoxParams } from './WebGLRefractor';
 import { enqueueBuild } from './BuildQueue';
+import { observeElementIntersection, observeElementResize } from './ObserverRegistry';
 import {
   isLiquidGlassAndroid,
   isLiquidGlassHoverless,
@@ -339,6 +340,77 @@ function subscribeScrollSafe(fn: ScrollSafeSubscriber): () => void {
   };
 }
 
+type BackdropSampleSubscriber = () => void;
+
+const backdropSampleSubs = new Set<BackdropSampleSubscriber>();
+const BACKDROP_SAMPLE_INTERVAL_MS = IS_MOBILE ? 180 : 96;
+const BACKDROP_SAMPLE_IDLE_MS = IS_MOBILE ? 220 : 140;
+let backdropSampleBound = false;
+let backdropSampleRaf = 0;
+let backdropSampleThrottleTimer: number | null = null;
+let backdropSampleIdleTimer: number | null = null;
+let backdropSampleLastAt = 0;
+
+function notifyBackdropSampleSubscribers(): void {
+  for (const fn of backdropSampleSubs) {
+    try {
+      fn();
+    } catch {
+      /* one subscriber must not break the rest */
+    }
+  }
+}
+
+function requestBackdropSample(force = false): void {
+  if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') return;
+  const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const wait = BACKDROP_SAMPLE_INTERVAL_MS - (now - backdropSampleLastAt);
+  if (!force && wait > 0) {
+    if (backdropSampleThrottleTimer === null) {
+      backdropSampleThrottleTimer = window.setTimeout(() => {
+        backdropSampleThrottleTimer = null;
+        requestBackdropSample(true);
+      }, wait);
+    }
+    return;
+  }
+  if (backdropSampleRaf) return;
+  backdropSampleRaf = requestAnimationFrame(() => {
+    backdropSampleRaf = 0;
+    backdropSampleLastAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    notifyBackdropSampleSubscribers();
+  });
+}
+
+function subscribeBackdropSampling(fn: BackdropSampleSubscriber): () => void {
+  backdropSampleSubs.add(fn);
+  if (!backdropSampleBound && typeof window !== 'undefined') {
+    backdropSampleBound = true;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (backdropSampleSubs.size === 0) return;
+        requestBackdropSample(false);
+        if (backdropSampleIdleTimer !== null) window.clearTimeout(backdropSampleIdleTimer);
+        backdropSampleIdleTimer = window.setTimeout(() => {
+          backdropSampleIdleTimer = null;
+          requestBackdropSample(true);
+        }, BACKDROP_SAMPLE_IDLE_MS);
+      },
+      { passive: true, capture: true }
+    );
+  }
+  return () => {
+    backdropSampleSubs.delete(fn);
+    if (backdropSampleSubs.size === 0) {
+      if (backdropSampleThrottleTimer !== null) window.clearTimeout(backdropSampleThrottleTimer);
+      if (backdropSampleIdleTimer !== null) window.clearTimeout(backdropSampleIdleTimer);
+      backdropSampleThrottleTimer = null;
+      backdropSampleIdleTimer = null;
+    }
+  };
+}
+
 /**
  * Relative luminance (0..1) of a CSS `backgroundColor`, or null when it's
  * effectively transparent (a gradient/image-only layer we can't read).
@@ -403,9 +475,9 @@ export class LiquidGlass {
   private quality: Exclude<LiquidGlassQuality, 'auto'>;
   private root: Document | ShadowRoot;
   private filter: FilterChain | null = null;
-  private resizeObserver: ResizeObserver | null = null;
-  private intersectionObserver: IntersectionObserver | null = null;
-  private autoQualityObserver: IntersectionObserver | null = null;
+  private unsubElementResize: (() => void) | null = null;
+  private unsubLazyIntersection: (() => void) | null = null;
+  private unsubAutoQualityIntersection: (() => void) | null = null;
   private mqlScheme: MediaQueryList | null = null;
   private mqlListener: ((e: MediaQueryListEvent) => void) | null = null;
   private currentWidth = 0;
@@ -433,6 +505,8 @@ export class LiquidGlass {
   private unsubResize: (() => void) | null = null;
   /** Unsubscribe from the shared mobile scroll-safe listener. */
   private unsubScrollSafe: (() => void) | null = null;
+  /** Unsubscribe from the shared backdrop sampling listener. */
+  private unsubBackdropSampling: (() => void) | null = null;
   private regenTimer: number | null = null;
   /** Invalidates async map encodes that finish after a newer build wins. */
   private buildGeneration = 0;
@@ -440,7 +514,9 @@ export class LiquidGlass {
   private shadowAdapt = 1;
   /** Resolved light/dark for scheme:'adaptive' (null = fall back to OS). */
   private resolvedAdaptiveScheme: 'light' | 'dark' | null = null;
-  private scrollRaf = 0;
+  private backdropSampleKey = '';
+  private backdropSampleAt = 0;
+  private backdropSampleLum: number | null = null;
   private autoQualityVisible = true;
   private scrollSafeActive = false;
 
@@ -495,27 +571,7 @@ export class LiquidGlass {
     // stays correct through responsive layouts, window resizes, orientation
     // changes, and being shown after starting at zero size. ResizeObserver fires
     // on the element's own box change, which covers all of the above.
-    if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const box = entry.borderBoxSize?.[0];
-          const width = box ? box.inlineSize : entry.contentRect.width;
-          const height = box ? box.blockSize : entry.contentRect.height;
-          if (
-            Math.abs(width - this.currentWidth) < 0.5 &&
-            Math.abs(height - this.currentHeight) < 0.5
-          )
-            continue;
-          this.currentWidth = Math.max(1, width);
-          this.currentHeight = Math.max(1, height);
-          if (this.options.applyRadius) {
-            this.element.style.borderRadius = `${this.computedRadius()}px`;
-          }
-          this.scheduleRegen();
-        }
-      });
-      this.resizeObserver.observe(element, { box: 'border-box' });
-    }
+    this.unsubElementResize = observeElementResize(element, this.onElementResize);
 
     // Browser zoom / moving to a different-DPR display changes devicePixelRatio
     // without changing the element's CSS size, so ResizeObserver won't catch it —
@@ -547,10 +603,9 @@ export class LiquidGlass {
         if (!this.destroyed) this.adaptToBackdrop();
       });
     }
-    // An adaptive element must re-read its backdrop as content scrolls under it.
-    if (this.options.scheme === 'adaptive' && !this.reducedTransparency) {
-      window.addEventListener('scroll', this.onBackdropScroll, { passive: true, capture: true });
-    }
+    // Adaptive elements share one throttled scroll sampler instead of each
+    // attaching an elementsFromPoint/getComputedStyle loop to scroll.
+    this.refreshBackdropSamplingSubscription();
   }
 
   update(partial: LiquidGlassOptions): void {
@@ -563,6 +618,7 @@ export class LiquidGlass {
       else this.teardownAutoQualityTracking();
     }
     this.applyTint();
+    this.refreshBackdropSamplingSubscription();
     if (this.options.applyRadius) {
       this.element.style.borderRadius = `${this.computedRadius()}px`;
     }
@@ -623,7 +679,7 @@ export class LiquidGlass {
    * Works on the fallback path too; only the reduced-transparency path opts out.
    */
   syncToBackdrop(): void {
-    this.adaptToBackdrop();
+    this.adaptToBackdrop(true);
   }
 
   /**
@@ -702,20 +758,20 @@ export class LiquidGlass {
       clearTimeout(this.regenTimer);
       this.regenTimer = null;
     }
-    this.resizeObserver?.disconnect();
-    this.resizeObserver = null;
-    this.intersectionObserver?.disconnect();
-    this.intersectionObserver = null;
+    this.unsubElementResize?.();
+    this.unsubElementResize = null;
+    this.unsubLazyIntersection?.();
+    this.unsubLazyIntersection = null;
     this.teardownAutoQualityTracking();
     if (this.mqlScheme && this.mqlListener) {
       this.mqlScheme.removeEventListener('change', this.mqlListener);
     }
-    window.removeEventListener('scroll', this.onBackdropScroll, { capture: true } as EventListenerOptions);
+    this.unsubBackdropSampling?.();
+    this.unsubBackdropSampling = null;
     this.unsubResize?.();
     this.unsubResize = null;
     this.unsubScrollSafe?.();
     this.unsubScrollSafe = null;
-    if (this.scrollRaf) cancelAnimationFrame(this.scrollRaf);
     this.setScrollSafe(false);
     this.cancelPendingBuild();
     this.removeFallbackFx();
@@ -761,27 +817,27 @@ export class LiquidGlass {
   private setupAutoQualityTracking(): void {
     LiquidGlass.autoQualityInstances.add(this);
     if (!IS_MOBILE) return;
-    if (this.autoQualityObserver || typeof IntersectionObserver === 'undefined') {
+    if (this.unsubAutoQualityIntersection || typeof IntersectionObserver === 'undefined') {
       LiquidGlass.requestAutoQualityRecalc();
       return;
     }
-    this.autoQualityObserver = new IntersectionObserver(
-      (entries) => {
-        const visible = entries[entries.length - 1]?.isIntersecting ?? true;
+    this.unsubAutoQualityIntersection = observeElementIntersection(
+      this.element,
+      (entry) => {
+        const visible = entry.isIntersecting;
         if (this.autoQualityVisible === visible) return;
         this.autoQualityVisible = visible;
         LiquidGlass.requestAutoQualityRecalc();
       },
       { rootMargin: '0px' }
     );
-    this.autoQualityObserver.observe(this.element);
     LiquidGlass.requestAutoQualityRecalc();
   }
 
   private teardownAutoQualityTracking(): void {
     LiquidGlass.autoQualityInstances.delete(this);
-    this.autoQualityObserver?.disconnect();
-    this.autoQualityObserver = null;
+    this.unsubAutoQualityIntersection?.();
+    this.unsubAutoQualityIntersection = null;
     this.autoQualityVisible = true;
     LiquidGlass.requestAutoQualityRecalc();
   }
@@ -812,6 +868,16 @@ export class LiquidGlass {
       this.unsubScrollSafe();
       this.unsubScrollSafe = null;
       this.setScrollSafe(false);
+    }
+  }
+
+  private refreshBackdropSamplingSubscription(): void {
+    const shouldSubscribe = this.options.scheme === 'adaptive' && !this.reducedTransparency;
+    if (shouldSubscribe && !this.unsubBackdropSampling) {
+      this.unsubBackdropSampling = subscribeBackdropSampling(this.onBackdropScroll);
+    } else if (!shouldSubscribe && this.unsubBackdropSampling) {
+      this.unsubBackdropSampling();
+      this.unsubBackdropSampling = null;
     }
   }
 
@@ -1176,9 +1242,10 @@ export class LiquidGlass {
   }
 
   private setupLazy(): void {
-    this.intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        const visible = entries[entries.length - 1]?.isIntersecting ?? false;
+    this.unsubLazyIntersection = observeElementIntersection(
+      this.element,
+      (entry) => {
+        const visible = entry.isIntersecting;
         if (this.destroyed || this.suspended) return;
         if (visible) {
           if (!this.filter) {
@@ -1202,7 +1269,6 @@ export class LiquidGlass {
       },
       { rootMargin: this.options.lazyMargin }
     );
-    this.intersectionObserver.observe(this.element);
   }
 
   private effectiveChromatic(): number {
@@ -1455,9 +1521,9 @@ export class LiquidGlass {
    *    dark one over light content, so it stays legible.
    * Resolvable solid backgrounds adapt; gradients/images fall back to neutral.
    */
-  private adaptToBackdrop(): void {
+  private adaptToBackdrop(forceSample = false): void {
     if (this.reducedTransparency) return;
-    const lum = this.sampleBackdropLuminance();
+    const lum = this.sampleBackdropLuminance(forceSample);
 
     if (this.options.edges) {
       const next = lum == null ? 1 : 1.4 - lum * 0.8; // dark→1.4, light→0.6
@@ -1490,17 +1556,44 @@ export class LiquidGlass {
     this.scheduleRegen();
   };
 
-  private onBackdropScroll = (): void => {
-    if (this.scrollRaf) return;
-    this.scrollRaf = requestAnimationFrame(() => {
-      this.scrollRaf = 0;
-      if (!this.destroyed) this.adaptToBackdrop();
-    });
+  private onElementResize = (entry: ResizeObserverEntry): void => {
+    const box = entry.borderBoxSize?.[0];
+    const width = box ? box.inlineSize : entry.contentRect.width;
+    const height = box ? box.blockSize : entry.contentRect.height;
+    if (
+      Math.abs(width - this.currentWidth) < 0.5 &&
+      Math.abs(height - this.currentHeight) < 0.5
+    ) {
+      return;
+    }
+    this.currentWidth = Math.max(1, width);
+    this.currentHeight = Math.max(1, height);
+    if (this.options.applyRadius) {
+      this.element.style.borderRadius = `${this.computedRadius()}px`;
+    }
+    this.scheduleRegen();
   };
 
-  private sampleBackdropLuminance(): number | null {
+  private onBackdropScroll = (): void => {
+    if (!this.destroyed) this.adaptToBackdrop();
+  };
+
+  private sampleBackdropLuminance(force = false): number | null {
     const r = this.element.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) return null;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const bucket = IS_MOBILE ? 24 : 12;
+    const key = [
+      Math.round(r.left / bucket),
+      Math.round(r.top / bucket),
+      Math.round(r.width / bucket),
+      Math.round(r.height / bucket),
+      window.innerWidth,
+      window.innerHeight,
+    ].join(':');
+    if (!force && key === this.backdropSampleKey && now - this.backdropSampleAt < BACKDROP_SAMPLE_INTERVAL_MS) {
+      return this.backdropSampleLum;
+    }
     const pts: [number, number][] = [
       [r.left + r.width / 2, r.top + r.height / 2],
       [r.left + 8, r.top + 8],
@@ -1523,7 +1616,11 @@ export class LiquidGlass {
       }
     }
     this.element.style.pointerEvents = prevPE;
-    return n ? total / n : null;
+    const lum = n ? total / n : null;
+    this.backdropSampleKey = key;
+    this.backdropSampleAt = now;
+    this.backdropSampleLum = lum;
+    return lum;
   }
 
   private variantTint(): string {

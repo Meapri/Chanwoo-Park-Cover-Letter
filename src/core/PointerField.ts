@@ -22,10 +22,12 @@ const visible = new Set<HTMLElement>();
 const lastGlow = new WeakMap<HTMLElement, number>();
 /** Last illumination written per element (same skip optimisation). */
 const lastIllum = new WeakMap<HTMLElement, number>();
+const rectCache = new WeakMap<HTMLElement, DOMRect>();
 let rafId = 0;
 let pointerX = -1e6;
 let pointerY = -1e6;
 let listening = false;
+let rectsDirty = true;
 
 /** Distance (px) beyond an element's box at which the edge light fades to zero. */
 const FALLOFF = 220;
@@ -51,8 +53,10 @@ function ensureObserver(): IntersectionObserver | null {
         const el = e.target as HTMLElement;
         if (e.isIntersecting) {
           visible.add(el);
+          markRectsDirty(true);
         } else {
           visible.delete(el);
+          rectCache.delete(el);
           // Clear any residual glow when it leaves the viewport.
           if ((lastGlow.get(el) ?? 0) !== 0) {
             lastGlow.set(el, 0);
@@ -66,6 +70,28 @@ function ensureObserver(): IntersectionObserver | null {
   return observer;
 }
 
+function markRectsDirty(shouldSchedule = false): void {
+  rectsDirty = true;
+  if (shouldSchedule) schedule();
+}
+
+function forgetElement(el: HTMLElement): void {
+  visible.delete(el);
+  elements.delete(el);
+  rectCache.delete(el);
+}
+
+function refreshRectCache(): void {
+  rectsDirty = false;
+  for (const el of Array.from(visible)) {
+    if (!el.isConnected) {
+      forgetElement(el);
+      continue;
+    }
+    rectCache.set(el, el.getBoundingClientRect());
+  }
+}
+
 function schedule(): void {
   if (rafId) return;
   rafId = requestAnimationFrame(flush);
@@ -74,26 +100,17 @@ function schedule(): void {
 function flush(): void {
   rafId = 0;
 
-  // Read phase — collect every rect first. Reading layout and writing styles in
-  // the same loop would thrash (each read after a write forces a reflow), so we
-  // batch all the getBoundingClientRect() reads, then do all the writes. Only
-  // on-screen elements are touched (off-screen ones are skipped entirely).
-  const els: HTMLElement[] = [];
-  const rects: DOMRect[] = [];
-  for (const el of visible) {
+  if (rectsDirty) refreshRectCache();
+
+  // Write phase — rects come from the viewport-change cache, so pointermove does
+  // not force layout across every visible glass element.
+  for (const el of Array.from(visible)) {
     if (!el.isConnected) {
-      visible.delete(el);
-      elements.delete(el);
+      forgetElement(el);
       continue;
     }
-    els.push(el);
-    rects.push(el.getBoundingClientRect());
-  }
-
-  // Write phase — no layout reads here, so no reflow is forced.
-  for (let i = 0; i < els.length; i++) {
-    const el = els[i];
-    const r = rects[i];
+    const r = rectCache.get(el);
+    if (!r) continue;
     if (r.width === 0 || r.height === 0) continue;
 
     // Shortest distance from the pointer to the element box (0 when inside).
@@ -131,6 +148,32 @@ function onPointerGone(): void {
   schedule();
 }
 
+function onViewportChange(): void {
+  markRectsDirty(true);
+}
+
+function stopListeningIfIdle(): void {
+  if (!listening || elements.size > 0) return;
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('blur', onPointerGone);
+  document.removeEventListener('pointerleave', onPointerGone);
+  window.removeEventListener('pointerdown', onPressDown);
+  window.removeEventListener('pointerup', onPressUp);
+  window.removeEventListener('pointercancel', onPressUp);
+  window.removeEventListener('scroll', onViewportChange, { capture: true } as EventListenerOptions);
+  window.removeEventListener('resize', onViewportChange);
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+  if (pressRaf) {
+    cancelAnimationFrame(pressRaf);
+    pressRaf = 0;
+  }
+  listening = false;
+  rectsDirty = true;
+}
+
 function onPressDown(e: PointerEvent): void {
   pressX = e.clientX;
   pressY = e.clientY;
@@ -150,21 +193,15 @@ function pressTick(): void {
   pressEnergy += (pressTarget - pressEnergy) * (rising ? 0.4 : 0.12);
   if (pressEnergy < 0.004 && pressTarget === 0) pressEnergy = 0;
 
-  // Read all rects, then write — same batching as flush() to avoid reflow thrash.
-  const els: HTMLElement[] = [];
-  const rects: DOMRect[] = [];
-  for (const el of visible) {
+  if (rectsDirty) refreshRectCache();
+
+  for (const el of Array.from(visible)) {
     if (!el.isConnected) {
-      visible.delete(el);
-      elements.delete(el);
+      forgetElement(el);
       continue;
     }
-    els.push(el);
-    rects.push(el.getBoundingClientRect());
-  }
-  for (let i = 0; i < els.length; i++) {
-    const el = els[i];
-    const r = rects[i];
+    const r = rectCache.get(el);
+    if (!r) continue;
     if (r.width === 0 || r.height === 0) continue;
 
     const dx = Math.max(r.left - pressX, 0, pressX - r.right);
@@ -192,9 +229,13 @@ function pressTick(): void {
 export function registerPointerLight(el: HTMLElement): void {
   if (typeof window === 'undefined') return;
   elements.add(el);
+  markRectsDirty();
   const io = ensureObserver();
   if (io) io.observe(el);
-  else visible.add(el); // no IntersectionObserver — treat all as visible
+  else {
+    visible.add(el); // no IntersectionObserver — treat all as visible
+    markRectsDirty();
+  }
   if (!listening) {
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('blur', onPointerGone);
@@ -202,6 +243,8 @@ export function registerPointerLight(el: HTMLElement): void {
     window.addEventListener('pointerdown', onPressDown, { passive: true });
     window.addEventListener('pointerup', onPressUp, { passive: true });
     window.addEventListener('pointercancel', onPressUp, { passive: true });
+    window.addEventListener('scroll', onViewportChange, { passive: true, capture: true });
+    window.addEventListener('resize', onViewportChange, { passive: true });
     listening = true;
   }
   schedule();
@@ -210,6 +253,7 @@ export function registerPointerLight(el: HTMLElement): void {
 export function unregisterPointerLight(el: HTMLElement): void {
   elements.delete(el);
   visible.delete(el);
+  rectCache.delete(el);
   observer?.unobserve(el);
   el.style.removeProperty('--lg-glow');
   el.style.removeProperty('--lg-pointer-x');
@@ -217,4 +261,5 @@ export function unregisterPointerLight(el: HTMLElement): void {
   el.style.removeProperty('--lg-illum');
   el.style.removeProperty('--lg-illum-x');
   el.style.removeProperty('--lg-illum-y');
+  stopListeningIfIdle();
 }

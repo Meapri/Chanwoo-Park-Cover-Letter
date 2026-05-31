@@ -23,6 +23,8 @@
  * element keeps everything except the backdrop, which this draws.
  */
 
+import { isLiquidGlassAndroid, isLiquidGlassMobileLike } from './DeviceProfile';
+
 export interface RefractorBoxParams {
   displacementMapUrl: string;
   displacementPadding: number;
@@ -131,6 +133,11 @@ void main() {
 
 let singleton: WebGLRefractor | null = null;
 let triedInit = false;
+const WEBGL_VIEWPORT_DPR_CAP = isLiquidGlassAndroid()
+  ? 1
+  : isLiquidGlassMobileLike()
+    ? 1.25
+    : 2;
 
 export function getWebGLRefractor(): WebGLRefractor | null {
   if (!triedInit) {
@@ -323,7 +330,7 @@ export class WebGLRefractor {
   private render(): void {
     const gl = this.gl;
     if (!gl || !this.program || !this.sceneTex) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(WEBGL_VIEWPORT_DPR_CAP, window.devicePixelRatio || 1);
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const cw = Math.round(vw * dpr);
