@@ -4,8 +4,8 @@ import type { LiquidGlassOptions } from '../src';
 interface GlassConfig extends LiquidGlassOptions {}
 
 const autoChipGlass: LiquidGlassOptions = {
-  profile: 'auto',
-  preset: 'auto',
+  profile: 'control',
+  preset: 'vivid',
   scheme: 'light',
   radius: 'pill',
 };
@@ -22,7 +22,7 @@ function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
   el.dataset.glass ||= JSON.stringify(config);
 }
 
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('.nav-action, .hero-actions .secondary-action, .project-detail-link, .detail-action, .detail-back-link, .detail-actions .secondary-action'))) {
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.nav-action, .hero-actions .secondary-action, .detail-back-link'))) {
   ensureGlass(el, autoControlGlass);
   el.classList.add('lg-interactive');
 }
