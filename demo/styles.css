@@ -46,10 +46,17 @@ code {
 
 .background-scene {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100lvh;
+  min-height: 100vh;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  contain: paint;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
   background:
     linear-gradient(120deg, rgba(37, 99, 235, 0.08), transparent 22%),
     linear-gradient(230deg, rgba(192, 38, 211, 0.08), transparent 28%),
@@ -64,6 +71,8 @@ code {
   background-position: center top;
   opacity: 0.72;
   filter: saturate(1) contrast(1.03);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .scene-grid {
@@ -340,11 +349,12 @@ h1 span {
 
 .identity-card {
   margin-top: 18px;
-  padding: 18px;
-  border-radius: 24px;
+  padding: 18px 0 0;
+  border-radius: 0;
   color: var(--ink);
-  background: var(--material-subtle);
-  border: 1px solid var(--material-hairline);
+  background: transparent;
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: none;
 }
 
 .identity-card strong,
@@ -367,15 +377,28 @@ h1 span {
 .proof-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin: 14px 0 0;
+  gap: 0;
+  margin: 16px 0 0;
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  border-radius: 20px;
 }
 
 .proof-grid div {
   padding: 14px;
-  border-radius: 22px;
-  background: var(--material-faint);
-  border: 1px solid var(--material-hairline);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.035);
+  border-right: 1px solid rgba(17, 24, 39, 0.055);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.055);
+  box-shadow: none;
+}
+
+.proof-grid div:nth-child(2n) {
+  border-right: 0;
+}
+
+.proof-grid div:nth-last-child(-n + 2) {
+  border-bottom: 0;
 }
 
 .proof-grid dt {
@@ -546,8 +569,9 @@ h1 span {
   padding: 8px 12px;
   border-radius: 14px;
   color: rgba(17, 24, 39, 0.76);
-  background: var(--material-subtle);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13);
   font-size: 13px;
   font-weight: 750;
 }
@@ -571,8 +595,9 @@ h1 span {
   padding: 0 12px;
   border-radius: 999px;
   color: rgba(17, 24, 39, 0.78);
-  background: var(--material-subtle);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13);
   font-size: 12px;
   font-weight: 800;
 }
@@ -666,15 +691,24 @@ h1 span {
 .detail-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
 }
 
 .detail-fact {
   min-width: 0;
-  padding: 16px;
-  border-radius: 22px;
+  padding: 16px 18px;
+  border-radius: 0;
   color: var(--ink);
-  border: 1px solid var(--material-hairline);
+  background: transparent;
+  border-right: 1px solid rgba(17, 24, 39, 0.07);
+  box-shadow: none;
+}
+
+.detail-fact:last-child {
+  border-right: 0;
 }
 
 .detail-fact span,
@@ -734,10 +768,11 @@ h1 span {
 .detail-points li {
   min-width: 0;
   padding: 13px 14px;
-  border-radius: 18px;
+  border-radius: 14px;
   color: rgba(17, 24, 39, 0.8);
-  background: var(--material-subtle);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  box-shadow: none;
   font-size: 14px;
   line-height: 1.58;
   font-weight: 650;
@@ -750,15 +785,24 @@ h1 span {
 .detail-narrative {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
 }
 
 .detail-narrative-section {
   min-width: 0;
   padding: 18px;
-  border-radius: 22px;
+  border-radius: 0;
   color: var(--ink);
-  border: 1px solid var(--material-hairline);
+  background: transparent;
+  border-right: 1px solid rgba(17, 24, 39, 0.07);
+  box-shadow: none;
+}
+
+.detail-narrative-section:last-child {
+  border-right: 0;
 }
 
 .detail-narrative-section h4 {
@@ -796,7 +840,7 @@ h1 span {
 .capability-grid div {
   min-height: 190px;
   padding: 24px;
-  background: var(--material-faint);
+  background: rgba(255, 255, 255, 0.045);
   border-right: 1px solid rgba(17, 24, 39, 0.06);
   border-bottom: 1px solid rgba(17, 24, 39, 0.06);
 }
@@ -888,8 +932,9 @@ h1 span {
   align-self: start;
   overflow: hidden;
   border-radius: 24px;
-  background: var(--material-subtle);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13);
 }
 
 .commit-table div {
@@ -984,12 +1029,41 @@ h1 span {
     grid-column: span 1;
   }
 
+  .detail-fact,
+  .detail-narrative-section {
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 24, 39, 0.07);
+  }
+
+  .detail-fact:last-child,
+  .detail-narrative-section:last-child {
+    border-bottom: 0;
+  }
+
   .contact-section {
     align-items: start;
   }
 }
 
 @media (max-width: 640px) {
+  .background-scene {
+    height: 100lvh;
+    min-height: 100lvh;
+    overscroll-behavior: none;
+  }
+
+  .scene-image {
+    inset: 0;
+    background-size: auto 100%;
+    background-position: center top;
+    opacity: 0.66;
+  }
+
+  .scene-grid {
+    opacity: 0.26;
+    background-size: 56px 56px;
+  }
+
   .site-nav {
     gap: 10px;
     padding-left: 12px;
@@ -1033,6 +1107,17 @@ h1 span {
 
   .proof-grid {
     grid-template-columns: 1fr;
+  }
+
+  .proof-grid div,
+  .proof-grid div:nth-child(2n),
+  .proof-grid div:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 24, 39, 0.055);
+  }
+
+  .proof-grid div:last-child {
+    border-bottom: 0;
   }
 
   .project-card,

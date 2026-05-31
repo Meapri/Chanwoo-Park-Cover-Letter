@@ -3,13 +3,6 @@ import type { LiquidGlassOptions } from '../src';
 
 interface GlassConfig extends LiquidGlassOptions {}
 
-const autoChipGlass: LiquidGlassOptions = {
-  profile: 'auto',
-  preset: 'auto',
-  scheme: 'light',
-  radius: 'auto',
-};
-
 const autoControlGlass: LiquidGlassOptions = {
   profile: 'auto',
   preset: 'auto',
@@ -20,10 +13,6 @@ const autoControlGlass: LiquidGlassOptions = {
 function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
   el.classList.add('liquid-glass');
   el.dataset.glass ||= JSON.stringify(config);
-}
-
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('.tag-row li, .stack-cloud li, .evidence-list li, .detail-points li, .detail-fact, .detail-narrative-section'))) {
-  ensureGlass(el, autoChipGlass);
 }
 
 for (const el of Array.from(document.querySelectorAll<HTMLElement>('.nav-action, .secondary-action, .project-detail-link, .detail-action'))) {
