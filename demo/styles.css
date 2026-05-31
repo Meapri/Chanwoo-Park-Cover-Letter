@@ -10,6 +10,9 @@
   --amber: #d97706;
   --green: #0f9f6e;
   --glass: rgba(255, 255, 255, 0.46);
+  --material-hairline: rgba(255, 255, 255, 0.34);
+  --material-subtle: rgba(255, 255, 255, 0.18);
+  --material-faint: rgba(255, 255, 255, 0.1);
   --shadow: 0 18px 70px rgba(30, 41, 59, 0.16);
 }
 
@@ -107,7 +110,7 @@ main,
   padding: 10px 12px 10px 18px;
   color: var(--ink);
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--material-hairline);
 }
 
 .brand {
@@ -155,13 +158,13 @@ main,
 }
 
 .nav-links a:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--material-subtle);
   color: var(--ink);
 }
 
 .nav-action {
   color: #fff;
-  background: linear-gradient(135deg, #1d4ed8, #0284c7);
+  background: rgba(37, 99, 235, 0.56);
   box-shadow: 0 10px 28px rgba(37, 99, 235, 0.24);
 }
 
@@ -257,14 +260,14 @@ h1 span {
 
 .secondary-action {
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--material-subtle);
   border-color: rgba(17, 24, 39, 0.1);
 }
 
 .hero-panel {
   min-height: 500px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--material-hairline);
 }
 
 .portrait-frame {
@@ -308,8 +311,8 @@ h1 span {
   padding: 18px;
   border-radius: 24px;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.52);
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: var(--material-subtle);
+  border: 1px solid var(--material-hairline);
 }
 
 .identity-card strong,
@@ -339,8 +342,8 @@ h1 span {
 .proof-grid div {
   padding: 14px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.48);
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: var(--material-faint);
+  border: 1px solid var(--material-hairline);
 }
 
 .proof-grid dt {
@@ -369,7 +372,7 @@ h1 span {
   align-items: center;
   padding: 24px 28px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--material-hairline);
 }
 
 .intro-strip span,
@@ -434,7 +437,7 @@ h1 span {
   flex-direction: column;
   border-radius: 28px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--material-hairline);
 }
 
 .project-card.featured {
@@ -501,7 +504,7 @@ h1 span {
   padding: 8px 12px;
   border-radius: 14px;
   color: rgba(17, 24, 39, 0.76);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--material-subtle);
   border: 1px solid rgba(17, 24, 39, 0.08);
   font-size: 13px;
   font-weight: 750;
@@ -526,7 +529,7 @@ h1 span {
   padding: 0 12px;
   border-radius: 999px;
   color: rgba(17, 24, 39, 0.78);
-  background: rgba(255, 255, 255, 0.58);
+  background: var(--material-subtle);
   border: 1px solid rgba(17, 24, 39, 0.08);
   font-size: 12px;
   font-weight: 800;
@@ -539,13 +542,13 @@ h1 span {
   overflow: hidden;
   border-radius: 30px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.64);
+  border: 1px solid var(--material-hairline);
 }
 
 .capability-grid div {
   min-height: 190px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
   border-right: 1px solid rgba(17, 24, 39, 0.06);
   border-bottom: 1px solid rgba(17, 24, 39, 0.06);
 }
@@ -578,7 +581,7 @@ h1 span {
   gap: 26px;
   padding: 28px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--material-hairline);
 }
 
 .timeline {
@@ -637,7 +640,7 @@ h1 span {
   align-self: start;
   overflow: hidden;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.52);
+  background: var(--material-subtle);
   border: 1px solid rgba(17, 24, 39, 0.08);
 }
 
@@ -673,7 +676,7 @@ h1 span {
   align-items: end;
   padding: 34px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.68);
+  border: 1px solid var(--material-hairline);
 }
 
 .contact-section h2 {
