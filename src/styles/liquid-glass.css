@@ -79,6 +79,26 @@
   z-index: 10;
 }
 
+/*
+ * Scroll-safe restore veil. Mobile Chromium can't interpolate from
+ * backdrop-filter:url(#svg-filter) to CSS frost, so the engine briefly keeps a
+ * matching frost layer behind content and fades it out after the SVG filter is
+ * restored. The element never goes flat; only opacity is animated.
+ */
+.lg-scroll-safe-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  background: var(--lg-scroll-safe-tint, transparent);
+  -webkit-backdrop-filter: var(--lg-scroll-safe-filter, none);
+  backdrop-filter: var(--lg-scroll-safe-filter, none);
+  transition: opacity var(--lg-scroll-safe-duration, 180ms) ease;
+  will-change: opacity;
+}
+
 .liquid-glass[data-scheme='dark'] {
   color: #fff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.42);

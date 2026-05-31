@@ -108,6 +108,12 @@ const DEFAULT_OPTIONS: ResolvedOptions = {
 
 /** rAF-debounced regen so dragging/resizing doesn't run the pixel loop hot. */
 const RESIZE_DEBOUNCE_MS = 80;
+const DESKTOP_DISPLACEMENT_DPR_SCALE = 0.2;
+const MOBILE_DISPLACEMENT_DPR_SCALE = 0.15;
+const MOBILE_DISPLACEMENT_DPR_CAP = 0.3;
+const DESKTOP_SPECULAR_DPR_SCALE = 0.65;
+const MOBILE_SPECULAR_DPR_SCALE = 0.3;
+const MOBILE_SPECULAR_DPR_CAP = 0.6;
 
 /**
  * A regular content card in the demo is roughly 200px tall; use that as the
@@ -298,71 +304,180 @@ function subscribeResize(fn: () => void): () => void {
   return () => sharedResizeSubs.delete(fn);
 }
 
-type ScrollSafeSubscriber = (active: boolean) => void;
+type ScrollSafeMode = 'svg' | 'frost';
+
+interface ScrollSafeSubscriber {
+  setMode(mode: ScrollSafeMode): void;
+  restoreScore(): number;
+}
+
+interface ScrollSafeRestoreTarget {
+  subscriber: ScrollSafeSubscriber;
+  mode: ScrollSafeMode;
+}
 
 const scrollSafeSubs = new Set<ScrollSafeSubscriber>();
 let scrollSafeBound = false;
-let scrollSafeActive = false;
+let scrollSafeMode: ScrollSafeMode = 'svg';
 let scrollSafeEndTimer: number | null = null;
 let scrollSafeRestoreRaf = 0;
-let scrollSafeRestoreQueue: ScrollSafeSubscriber[] = [];
+let scrollSafeRestoreIdle = 0;
+let scrollSafeBudgetTimer: number | null = null;
+let scrollSafeRestoreQueue: ScrollSafeRestoreTarget[] = [];
+let scrollSafeLastY = typeof window !== 'undefined' ? window.scrollY : 0;
+let scrollSafeLastAt = 0;
+let scrollSafePressureUntil = 0;
+let scrollSafeLongTaskObserver: PerformanceObserver | null = null;
 
-const SCROLL_SAFE_IDLE_MS = 180;
-const SCROLL_SAFE_RESTORE_BATCH = 4;
+const SCROLL_SAFE_IDLE_MS = 320;
+const SCROLL_SAFE_RESTORE_BATCH = 2;
+const SCROLL_SAFE_RESTORE_TIMEOUT_MS = 180;
+const SCROLL_SAFE_FAST_VELOCITY = 1.15;
+const SCROLL_SAFE_FAST_PRESSURE_MS = 650;
+const SCROLL_SAFE_LONG_TASK_PRESSURE_MS = 2500;
+const SCROLL_SAFE_SVG_BUDGET = 8;
+const SCROLL_SAFE_PRESSURE_SVG_BUDGET = 3;
+const SCROLL_SAFE_TRANSITION_MS = 180;
+
+function nowMs(): number {
+  return typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
+}
 
 function cancelScrollSafeRestore(): void {
   if (scrollSafeRestoreRaf) {
     cancelAnimationFrame(scrollSafeRestoreRaf);
     scrollSafeRestoreRaf = 0;
   }
+  if (scrollSafeRestoreIdle && typeof cancelIdleCallback === 'function') {
+    cancelIdleCallback(scrollSafeRestoreIdle);
+    scrollSafeRestoreIdle = 0;
+  }
+  if (scrollSafeBudgetTimer !== null && typeof window !== 'undefined') {
+    window.clearTimeout(scrollSafeBudgetTimer);
+    scrollSafeBudgetTimer = null;
+  }
   scrollSafeRestoreQueue = [];
+}
+
+function scrollSafePressureActive(): boolean {
+  return nowMs() < scrollSafePressureUntil;
+}
+
+function extendScrollSafePressure(duration = SCROLL_SAFE_FAST_PRESSURE_MS): void {
+  scrollSafePressureUntil = Math.max(scrollSafePressureUntil, nowMs() + duration);
+}
+
+function updateScrollSafePressure(event?: Event): void {
+  const now = nowMs();
+  if (typeof window !== 'undefined') {
+    const y = window.scrollY;
+    if (scrollSafeLastAt > 0) {
+      const dt = Math.max(1, now - scrollSafeLastAt);
+      const velocity = Math.abs(y - scrollSafeLastY) / dt;
+      if (velocity >= SCROLL_SAFE_FAST_VELOCITY) extendScrollSafePressure();
+    }
+    scrollSafeLastY = y;
+    scrollSafeLastAt = now;
+  }
+  if (
+    typeof WheelEvent !== 'undefined' &&
+    event instanceof WheelEvent &&
+    Math.abs(event.deltaY) >= 90
+  ) {
+    extendScrollSafePressure();
+  }
+}
+
+function currentScrollSafeActiveMode(event?: Event): Exclude<ScrollSafeMode, 'svg'> {
+  updateScrollSafePressure(event);
+  return 'frost';
+}
+
+function queueScrollSafeRestoreBatch(): void {
+  if (typeof requestIdleCallback === 'function') {
+    scrollSafeRestoreIdle = requestIdleCallback(
+      () => {
+        scrollSafeRestoreIdle = 0;
+        runScrollSafeRestoreBatch();
+      },
+      { timeout: SCROLL_SAFE_RESTORE_TIMEOUT_MS }
+    );
+    return;
+  }
+  scrollSafeRestoreRaf = requestAnimationFrame(runScrollSafeRestoreBatch);
 }
 
 function runScrollSafeRestoreBatch(): void {
   scrollSafeRestoreRaf = 0;
+  scrollSafeRestoreIdle = 0;
   const batch = scrollSafeRestoreQueue.splice(0, SCROLL_SAFE_RESTORE_BATCH);
-  for (const fn of batch) {
-    if (!scrollSafeSubs.has(fn)) continue;
+  for (const target of batch) {
+    if (!scrollSafeSubs.has(target.subscriber)) continue;
     try {
-      fn(false);
+      target.subscriber.setMode(target.mode);
     } catch {
       /* one subscriber must not break the rest */
     }
   }
   if (scrollSafeRestoreQueue.length) {
-    scrollSafeRestoreRaf = requestAnimationFrame(runScrollSafeRestoreBatch);
+    queueScrollSafeRestoreBatch();
   }
 }
 
 function scheduleScrollSafeRestore(): void {
   cancelScrollSafeRestore();
-  scrollSafeRestoreQueue = Array.from(scrollSafeSubs);
+  const pressureActive = scrollSafePressureActive();
+  const sorted = Array.from(scrollSafeSubs)
+    .map((subscriber, index) => ({
+      subscriber,
+      index,
+      score: subscriber.restoreScore(),
+    }))
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  const svgBudget = pressureActive ? SCROLL_SAFE_PRESSURE_SVG_BUDGET : SCROLL_SAFE_SVG_BUDGET;
+  const svgTargets = new Set(sorted.slice(0, svgBudget).map((item) => item.subscriber));
+  scrollSafeRestoreQueue = sorted.map(({ subscriber }) => ({
+    subscriber,
+    mode: svgTargets.has(subscriber) ? 'svg' : 'frost',
+  }));
   if (!scrollSafeRestoreQueue.length) return;
+  if (pressureActive && typeof window !== 'undefined') {
+    const pressureDelay = Math.max(0, scrollSafePressureUntil - nowMs()) + 40;
+    scrollSafeBudgetTimer = window.setTimeout(() => {
+      scrollSafeBudgetTimer = null;
+      if (scrollSafeMode === 'svg' && scrollSafeSubs.size > 0) {
+        scheduleScrollSafeRestore();
+      }
+    }, pressureDelay);
+  }
   if (typeof requestAnimationFrame !== 'function') {
     const queue = scrollSafeRestoreQueue.splice(0);
-    for (const fn of queue) {
+    for (const target of queue) {
       try {
-        fn(false);
+        target.subscriber.setMode(target.mode);
       } catch {
         /* one subscriber must not break the rest */
       }
     }
     return;
   }
-  scrollSafeRestoreRaf = requestAnimationFrame(runScrollSafeRestoreBatch);
+  queueScrollSafeRestoreBatch();
 }
 
-function notifyScrollSafe(active: boolean): void {
-  if (scrollSafeActive === active) return;
-  scrollSafeActive = active;
-  if (!active) {
+function notifyScrollSafe(mode: ScrollSafeMode): void {
+  if (scrollSafeMode === mode) return;
+  scrollSafeMode = mode;
+  if (mode === 'svg') {
     scheduleScrollSafeRestore();
+    requestBackdropSample(true);
     return;
   }
   cancelScrollSafeRestore();
-  for (const fn of scrollSafeSubs) {
+  for (const subscriber of scrollSafeSubs) {
     try {
-      fn(active);
+      subscriber.setMode(mode);
     } catch {
       /* one subscriber must not break the rest */
     }
@@ -374,30 +489,54 @@ function armScrollSafeIdleTimer(): void {
   if (scrollSafeEndTimer !== null) window.clearTimeout(scrollSafeEndTimer);
   scrollSafeEndTimer = window.setTimeout(() => {
     scrollSafeEndTimer = null;
-    notifyScrollSafe(false);
+    notifyScrollSafe('svg');
   }, SCROLL_SAFE_IDLE_MS);
 }
 
-function beginScrollSafe(): void {
+function beginScrollSafe(event?: Event): void {
   if (scrollSafeSubs.size === 0) return;
-  notifyScrollSafe(true);
+  notifyScrollSafe(currentScrollSafeActiveMode(event));
   armScrollSafeIdleTimer();
 }
 
-function subscribeScrollSafe(fn: ScrollSafeSubscriber): () => void {
-  scrollSafeSubs.add(fn);
-  if (scrollSafeActive) {
+function setupScrollSafeLongTaskObserver(): void {
+  if (
+    scrollSafeLongTaskObserver ||
+    typeof PerformanceObserver === 'undefined' ||
+    typeof window === 'undefined'
+  ) {
+    return;
+  }
+  try {
+    scrollSafeLongTaskObserver = new PerformanceObserver((list) => {
+      if (list.getEntries().length === 0) return;
+      extendScrollSafePressure(SCROLL_SAFE_LONG_TASK_PRESSURE_MS);
+      if (scrollSafeMode !== 'svg') {
+        notifyScrollSafe('frost');
+        armScrollSafeIdleTimer();
+      }
+    });
+    scrollSafeLongTaskObserver.observe({ entryTypes: ['longtask'] });
+  } catch {
+    scrollSafeLongTaskObserver = null;
+  }
+}
+
+function subscribeScrollSafe(subscriber: ScrollSafeSubscriber): () => void {
+  scrollSafeSubs.add(subscriber);
+  if (scrollSafeMode !== 'svg') {
     try {
-      fn(true);
+      subscriber.setMode(scrollSafeMode);
     } catch {
       /* one subscriber must not break the rest */
     }
   }
   if (!scrollSafeBound && typeof window !== 'undefined') {
     scrollSafeBound = true;
+    setupScrollSafeLongTaskObserver();
     const onPointerDown = (event: PointerEvent): void => {
       if (event.pointerType === 'mouse') return;
-      beginScrollSafe();
+      beginScrollSafe(event);
     };
     window.addEventListener(
       'scroll',
@@ -410,8 +549,8 @@ function subscribeScrollSafe(fn: ScrollSafeSubscriber): () => void {
     window.addEventListener('wheel', beginScrollSafe, { passive: true, capture: true });
   }
   return () => {
-    scrollSafeSubs.delete(fn);
-    if (scrollSafeSubs.size === 0) notifyScrollSafe(false);
+    scrollSafeSubs.delete(subscriber);
+    if (scrollSafeSubs.size === 0) notifyScrollSafe('svg');
   };
 }
 
@@ -438,6 +577,7 @@ function notifyBackdropSampleSubscribers(): void {
 
 function requestBackdropSample(force = false): void {
   if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') return;
+  if (scrollSafeMode !== 'svg' && !force) return;
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const wait = BACKDROP_SAMPLE_INTERVAL_MS - (now - backdropSampleLastAt);
   if (!force && wait > 0) {
@@ -469,6 +609,7 @@ function subscribeBackdropSampling(fn: BackdropSampleSubscriber): () => void {
         if (backdropSampleIdleTimer !== null) window.clearTimeout(backdropSampleIdleTimer);
         backdropSampleIdleTimer = window.setTimeout(() => {
           backdropSampleIdleTimer = null;
+          if (scrollSafeMode !== 'svg') return;
           requestBackdropSample(true);
         }, BACKDROP_SAMPLE_IDLE_MS);
       },
@@ -564,6 +705,9 @@ export class LiquidGlass {
   private reducedTransparency = false;
   /** Injected child layer for the enhanced fallback (specular rim / refraction). */
   private fxLayer: HTMLElement | null = null;
+  /** Brief frost veil used to hide CSS-frost → SVG-filter restore snaps. */
+  private scrollSafeLayer: HTMLElement | null = null;
+  private scrollSafeLayerTimer: number | null = null;
   /** backdropSource refraction state (Firefox -moz-element / Safari DOM clone). */
   private backdropSceneEl: HTMLElement | null = null;
   private refractClone: HTMLElement | null = null;
@@ -593,7 +737,11 @@ export class LiquidGlass {
   private backdropSampleAt = 0;
   private backdropSampleLum: number | null = null;
   private autoQualityVisible = true;
-  private scrollSafeActive = false;
+  private scrollSafeMode: ScrollSafeMode = 'svg';
+  private readonly scrollSafeSubscriber: ScrollSafeSubscriber = {
+    setMode: (mode) => this.setScrollSafeMode(mode),
+    restoreScore: () => this.scrollSafeRestoreScore(),
+  };
 
   constructor(element: HTMLElement, options: LiquidGlassOptions = {}) {
     this.element = element;
@@ -655,7 +803,7 @@ export class LiquidGlass {
     this.unsubResize = subscribeResize(this.onWindowResize);
 
     if (this.options.quality === 'auto') this.setupAutoQualityTracking();
-    if (this.shouldUseScrollSafe()) this.unsubScrollSafe = subscribeScrollSafe(this.onScrollSafeChange);
+    if (this.shouldUseScrollSafe()) this.unsubScrollSafe = subscribeScrollSafe(this.scrollSafeSubscriber);
 
     if (this.options.scheme === 'auto' && typeof window.matchMedia === 'function') {
       this.mqlScheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -798,9 +946,10 @@ export class LiquidGlass {
   /** Detach the GPU filter but keep the instance alive (cheap show/hide). */
   suspend(): void {
     if (this.suspended || this.destroyed) return;
-    this.setScrollSafe(false);
+    this.setScrollSafeMode('svg');
     this.suspended = true;
     this.cancelPendingBuild();
+    this.removeScrollSafeTransitionLayer();
     this.removeFallbackFx();
     this.teardownGpu();
     this.element.style.backdropFilter = 'none';
@@ -847,8 +996,9 @@ export class LiquidGlass {
     this.unsubResize = null;
     this.unsubScrollSafe?.();
     this.unsubScrollSafe = null;
-    this.setScrollSafe(false);
+    this.setScrollSafeMode('svg');
     this.cancelPendingBuild();
+    this.removeScrollSafeTransitionLayer();
     this.removeFallbackFx();
     this.teardownGpu();
     this.filter?.destroy();
@@ -939,11 +1089,11 @@ export class LiquidGlass {
   private refreshScrollSafeSubscription(): void {
     const shouldSubscribe = this.shouldUseScrollSafe();
     if (shouldSubscribe && !this.unsubScrollSafe) {
-      this.unsubScrollSafe = subscribeScrollSafe(this.onScrollSafeChange);
+      this.unsubScrollSafe = subscribeScrollSafe(this.scrollSafeSubscriber);
     } else if (!shouldSubscribe && this.unsubScrollSafe) {
       this.unsubScrollSafe();
       this.unsubScrollSafe = null;
-      this.setScrollSafe(false);
+      this.setScrollSafeMode('svg');
     }
   }
 
@@ -957,26 +1107,108 @@ export class LiquidGlass {
     }
   }
 
-  private onScrollSafeChange = (active: boolean): void => {
-    this.setScrollSafe(active);
-  };
+  private scrollSafeRestoreScore(): number {
+    if (this.destroyed || this.suspended || !this.filter) return -1_000_000;
+    if (typeof window === 'undefined') return 0;
 
-  private setScrollSafe(active: boolean): void {
-    if (active === this.scrollSafeActive) return;
-    this.scrollSafeActive = active;
+    const rect = this.element.getBoundingClientRect();
+    const viewportWidth = window.innerWidth || 1;
+    const viewportHeight = window.innerHeight || 1;
+    const visibleWidth = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0));
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+    const visibleArea = visibleWidth * visibleHeight;
+    if (visibleArea <= 0) return -1_000_000;
+
+    const area = Math.max(1, rect.width * rect.height);
+    const visibleRatio = visibleArea / area;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const centerDistance = Math.hypot(
+      (centerX - viewportWidth / 2) / viewportWidth,
+      (centerY - viewportHeight / 2) / viewportHeight
+    );
+    const profile = this.resolveOpticalProfile();
+    const profileBonus =
+      profile === 'control' || profile === 'selection'
+        ? 80
+        : profile === 'bar'
+          ? 70
+          : profile === 'card'
+            ? 35
+            : 25;
+    const sizePenalty = Math.min(40, area / 12_000);
+
+    return profileBonus + visibleRatio * 60 - centerDistance * 45 - sizePenalty;
+  }
+
+  private scrollSafeCssForMode(mode: ScrollSafeMode): string {
+    if (mode === 'frost') return this.profiledFallbackFilter();
+    return this.filter?.url ?? 'none';
+  }
+
+  private setScrollSafeMode(mode: ScrollSafeMode): void {
+    if (mode === this.scrollSafeMode) return;
+    const previousMode = this.scrollSafeMode;
+    this.scrollSafeMode = mode;
     if (this.destroyed || this.suspended || this.usesFallback || this.usesGpu) return;
-    if (active) {
-      if (!this.filter) return;
-      const css = this.profiledFallbackFilter();
-      this.element.style.backdropFilter = css;
-      (this.element.style as WebkitStyle).webkitBackdropFilter = css;
-      return;
+    if (mode === 'svg' && !this.filter) return;
+    if (previousMode === 'frost' && mode === 'svg') {
+      this.startScrollSafeTransitionLayer(this.profiledFallbackFilter());
+    } else if (mode === 'frost') {
+      this.removeScrollSafeTransitionLayer();
     }
-    if (this.filter) {
-      const css = this.filter.url;
-      this.element.style.backdropFilter = css;
-      (this.element.style as WebkitStyle).webkitBackdropFilter = css;
+    const css = this.scrollSafeCssForMode(mode);
+    this.element.style.backdropFilter = css;
+    (this.element.style as WebkitStyle).webkitBackdropFilter = css;
+  }
+
+  private startScrollSafeTransitionLayer(filterCss: string): void {
+    if (this.reducedTransparency || typeof window === 'undefined') return;
+    if (this.scrollSafeLayerTimer !== null) {
+      window.clearTimeout(this.scrollSafeLayerTimer);
+      this.scrollSafeLayerTimer = null;
     }
+
+    let layer = this.scrollSafeLayer;
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.className = 'lg-scroll-safe-layer';
+      layer.setAttribute('aria-hidden', 'true');
+      this.element.insertBefore(layer, this.element.firstChild);
+      this.scrollSafeLayer = layer;
+    }
+
+    layer.style.transition = 'none';
+    layer.style.opacity = '1';
+    layer.style.setProperty('--lg-scroll-safe-filter', filterCss);
+    layer.style.setProperty('--lg-scroll-safe-duration', `${SCROLL_SAFE_TRANSITION_MS}ms`);
+    layer.style.setProperty(
+      '--lg-scroll-safe-tint',
+      this.element.style.backgroundColor || this.options.tint || this.variantTint()
+    );
+
+    requestAnimationFrame(() => {
+      if (this.scrollSafeLayer !== layer) return;
+      layer.style.transition = '';
+      layer.style.opacity = '0';
+    });
+
+    this.scrollSafeLayerTimer = window.setTimeout(() => {
+      if (this.scrollSafeLayer === layer) {
+        layer.remove();
+        this.scrollSafeLayer = null;
+      }
+      this.scrollSafeLayerTimer = null;
+    }, SCROLL_SAFE_TRANSITION_MS + 80);
+  }
+
+  private removeScrollSafeTransitionLayer(): void {
+    if (this.scrollSafeLayerTimer !== null && typeof window !== 'undefined') {
+      window.clearTimeout(this.scrollSafeLayerTimer);
+      this.scrollSafeLayerTimer = null;
+    }
+    this.scrollSafeLayer?.remove();
+    this.scrollSafeLayer = null;
   }
 
   private resolveRoot(): Document | ShadowRoot {
@@ -1329,7 +1561,7 @@ export class LiquidGlass {
             // into view at once don't block the scroll.
             this.scheduleBuild(() => this.installFilter());
           } else {
-            const css = this.scrollSafeActive ? this.profiledFallbackFilter() : this.filter.url;
+            const css = this.scrollSafeCssForMode(this.scrollSafeMode);
             this.element.style.backdropFilter = css;
             (this.element.style as WebkitStyle).webkitBackdropFilter = css;
           }
@@ -1391,16 +1623,18 @@ export class LiquidGlass {
   /**
    * The displacement map is a smooth gradient that feImage bilinear-upscales to
    * the element box, so it can render well below 1× with no visible loss. Keep
-   * the default output around 0.4×; the map is supersampled before downscale, so
+   * the default output around 0.3×; the map is supersampled before downscale, so
    * the rim stays smooth while canvas area / encode work drops aggressively.
    */
   private displacementDpr(): number {
     // The lens is a smooth field and the maps are supersampled+downscaled (so
     // low output resolutions stay anti-aliased), letting us render the texture
-    // small — ~0.4× at the default mapPixelRatio — which cuts the per-frame
+    // small — ~0.3× at the default mapPixelRatio — which cuts the per-frame
     // backdrop-filter sampling cost with no visible stair-stepping.
-    const dpr = this.options.mapPixelRatio * 0.2;
-    return IS_MOBILE ? Math.min(dpr, 0.4) : dpr;
+    const dpr =
+      this.options.mapPixelRatio *
+      (IS_MOBILE ? MOBILE_DISPLACEMENT_DPR_SCALE : DESKTOP_DISPLACEMENT_DPR_SCALE);
+    return IS_MOBILE ? Math.min(dpr, MOBILE_DISPLACEMENT_DPR_CAP) : dpr;
   }
 
   /**
@@ -1408,8 +1642,10 @@ export class LiquidGlass {
    * sample it lower; the rim is screen-blended and supersampled before encode.
    */
   private specularDpr(): number {
-    const dpr = this.options.mapPixelRatio * (IS_MOBILE ? 0.4 : 0.65);
-    return IS_MOBILE ? Math.min(dpr, 0.8) : dpr;
+    const dpr =
+      this.options.mapPixelRatio *
+      (IS_MOBILE ? MOBILE_SPECULAR_DPR_SCALE : DESKTOP_SPECULAR_DPR_SCALE);
+    return IS_MOBILE ? Math.min(dpr, MOBILE_SPECULAR_DPR_CAP) : dpr;
   }
 
   private async installFilter(): Promise<void> {
@@ -1452,7 +1688,7 @@ export class LiquidGlass {
       root: this.root,
     });
 
-    const css = this.scrollSafeActive ? this.profiledFallbackFilter() : this.filter.url;
+    const css = this.scrollSafeCssForMode(this.scrollSafeMode);
     this.element.style.backdropFilter = css;
     (this.element.style as WebkitStyle).webkitBackdropFilter = css;
   }
@@ -1462,6 +1698,7 @@ export class LiquidGlass {
     this.filter?.destroy();
     this.filter = null;
     this.removeFallbackFx();
+    this.removeScrollSafeTransitionLayer();
     this.teardownGpu();
     this.usesFallback = this.shouldFallback();
     if (this.usesFallback && !this.reducedTransparency && !this.suspended && this.tryInstallGpu()) {
