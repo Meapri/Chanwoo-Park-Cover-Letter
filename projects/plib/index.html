@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="description" content="Plib 프로젝트 상세 설명: Android app-private rootfs, Linux/glibc runtime, JNI report, EGL/GLES, ALR runtime plan." />
+    <title>Plib Android Linux runtime — 박찬우 프로젝트 상세</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="/demo/styles.css" />
+  </head>
+  <body>
+    <div class="background-scene" aria-hidden="true">
+      <div class="scene-image"></div>
+      <div class="scene-grid"></div>
+      <div class="scene-wash"></div>
+    </div>
+
+    <header class="site-nav liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":"pill","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+      <a class="brand" href="../../#top" aria-label="박찬우 포트폴리오 홈">
+        <span class="brand-mark">PCW</span>
+        <span>Chanwoo Park</span>
+      </a>
+      <nav class="nav-links" aria-label="주요 섹션">
+        <a href="../../#projects">프로젝트</a>
+        <a href="../../#capabilities">역량</a>
+        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#contact">연락</a>
+      </nav>
+      <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
+    </header>
+
+    <main id="top" class="detail-page">
+      <section class="section-shell detail-hero">
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">프로젝트 목록으로</a>
+        <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32,"refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+          <div class="detail-meta">
+            <span>Android & Linux</span>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/Plib" target="_blank" rel="noreferrer">GitHub 코드</a>
+          </div>
+          <h1>Plib: Android 앱 안에서 Linux/glibc 런타임을 검증하는 실험</h1>
+          <p>
+            Plib는 Android의 app-private 공간에서 rootless Linux/glibc 실행을 실험하는 런타임 프로젝트입니다.
+            clean-room 문서, JNI runtime report, EGL/GLES pbuffer, Android Surface, ALR 실행 계획, rootfs 안전 추출과 GPU bridge 테스트를
+            함께 묶어 런타임 경계가 실제로 어디서 깨지는지 확인합니다.
+          </p>
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>구현 포인트</h4>
+              <ul class="detail-points">
+                <li>C++ JNI 계층에서 runtime report, EGL/GLES probe, Surface rendering, <code>dlopen</code> probe를 분리했습니다.</li>
+                <li>alr_runtime의 config, path, env, exec, hook, interposer, trampoline 계층으로 실행 계획을 나눴습니다.</li>
+                <li>Kotlin 쪽 RootfsInstaller, RootfsInstallPlan, NativeCommandRunner로 안전 추출과 실행 흐름을 관리했습니다.</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>코드 근거</h4>
+              <ul class="evidence-list detail-evidence">
+                <li><code>app/src/main/cpp/runtime_report.cpp</code></li>
+                <li><code>app/src/main/cpp/alr_runtime</code></li>
+                <li><code>app/src/main/java/dev/chanwoo/androlinux</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/Plib" target="_blank" rel="noreferrer">저장소 열기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">다른 프로젝트 보기</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Chanwoo Park</span>
+      <span>Powered by a custom Liquid Glass engine.</span>
+    </footer>
+
+    <script type="module" src="/demo/demo.ts"></script>
+  </body>
+</html>

@@ -1194,6 +1194,7 @@ export class LiquidGlass {
       tagName: this.element.tagName,
       role: this.element.getAttribute('role'),
       ariaLabel: this.element.getAttribute('aria-label'),
+      href: this.element instanceof HTMLAnchorElement ? this.element.getAttribute('href') : null,
       className,
       textLength: this.element.textContent?.trim().length ?? 0,
       buttonCount: this.element.querySelectorAll('button,[role="button"]').length,

@@ -14,9 +14,45 @@ const autoChipGlass: LiquidGlassOptions = {
   saturation: 'auto',
 };
 
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('.tag-row li, .stack-cloud li, .evidence-list li'))) {
+const autoControlGlass: LiquidGlassOptions = {
+  profile: 'auto',
+  preset: 'auto',
+  scheme: 'light',
+  radius: 'pill',
+  refraction: 'auto',
+  thickness: 'auto',
+  blur: 'auto',
+  saturation: 'auto',
+};
+
+function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
   el.classList.add('liquid-glass');
-  el.dataset.glass = JSON.stringify(autoChipGlass);
+  el.dataset.glass ||= JSON.stringify(config);
+}
+
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.tag-row li, .stack-cloud li, .evidence-list li, .detail-points li'))) {
+  ensureGlass(el, autoChipGlass);
+}
+
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.nav-action, .secondary-action, .project-detail-link, .detail-action'))) {
+  ensureGlass(el, autoControlGlass);
+  el.classList.add('lg-interactive');
+}
+
+for (const card of Array.from(document.querySelectorAll<HTMLElement>('[data-detail-href]'))) {
+  card.setAttribute('role', 'link');
+  card.tabIndex = 0;
+  const href = card.dataset.detailHref;
+  const openDetail = (event: MouseEvent | KeyboardEvent): void => {
+    const target = event.target as HTMLElement | null;
+    if (!href || target?.closest('a, button, input, select, textarea, [role="button"]')) return;
+    event.preventDefault();
+    window.location.assign(href);
+  };
+  card.addEventListener('click', openDetail);
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') openDetail(event);
+  });
 }
 
 // Auto-apply LiquidGlass to every element with [data-glass]

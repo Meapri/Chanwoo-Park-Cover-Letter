@@ -4,6 +4,7 @@ export interface LiquidGlassAutoProfileInput {
   tagName?: string;
   role?: string | null;
   ariaLabel?: string | null;
+  href?: string | null;
   className?: string | null;
   textLength?: number;
   buttonCount?: number;
@@ -42,6 +43,14 @@ function resolveSemanticProfile(
   const className = input.className?.toLowerCase() ?? '';
   const controlCount = (input.buttonCount ?? 0) + (input.inputCount ?? 0);
   const linkCount = input.linkCount ?? 0;
+  const isLink = tag === 'a' || role === 'link' || Boolean(input.href);
+  const short = Math.min(input.width, input.height);
+  const radiusRatio = input.radius / Math.max(1, short);
+  const buttonLikeClass =
+    /(^|[\s_-])(action|button|btn|cta|control|chip|tag|pill|badge)([\s_-]|$)/.test(
+      className
+    );
+  const buttonLikeShape = short <= 96 && radiusRatio >= 0.36;
 
   if (
     role === 'tablist' ||
@@ -53,6 +62,7 @@ function resolveSemanticProfile(
   }
   if (
     tag === 'button' ||
+    (isLink && (buttonLikeClass || buttonLikeShape)) ||
     role === 'button' ||
     role === 'switch' ||
     role === 'slider' ||

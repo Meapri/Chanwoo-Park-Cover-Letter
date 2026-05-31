@@ -5,6 +5,16 @@ const cases = [
   ['header tag resolves to bar', { tagName: 'header', width: 960, height: 52, radius: 26 }, 'bar'],
   ['navigation role resolves to bar', { role: 'navigation', width: 720, height: 56, radius: 28 }, 'bar'],
   ['button tag resolves to control', { tagName: 'button', width: 108, height: 44, radius: 999 }, 'control'],
+  [
+    'button-like anchor resolves to control',
+    { tagName: 'a', href: '#projects', className: 'secondary-action', width: 248, height: 54, radius: 999 },
+    'control',
+  ],
+  [
+    'pill anchor geometry resolves to control',
+    { tagName: 'a', href: '#detail', width: 176, height: 46, radius: 23, textLength: 18 },
+    'control',
+  ],
   ['slider role resolves to control', { role: 'slider', width: 240, height: 44, radius: 22 }, 'control'],
   ['tablist role resolves to selection', { role: 'tablist', width: 280, height: 64, radius: 999 }, 'selection'],
   [

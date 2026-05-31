@@ -264,6 +264,21 @@ h1 span {
   border-color: rgba(17, 24, 39, 0.08);
 }
 
+.secondary-action.liquid-glass,
+.secondary-action.liquid-glass[data-adaptive],
+.secondary-action.liquid-glass[data-adaptive][data-scheme='light'],
+.project-detail-link.liquid-glass,
+.detail-action.liquid-glass,
+.nav-action.liquid-glass {
+  color: var(--ink);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.34);
+}
+
+.nav-action.liquid-glass[data-scheme='dark'] {
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(15, 23, 42, 0.26);
+}
+
 .hero-panel {
   min-height: 500px;
   padding: 24px;
@@ -451,6 +466,16 @@ h1 span {
   border: 1px solid var(--material-hairline);
 }
 
+.project-card[data-detail-href] {
+  cursor: pointer;
+  scroll-margin-top: 108px;
+}
+
+.project-card[data-detail-href]:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.38);
+  outline-offset: 4px;
+}
+
 .project-card.featured {
   grid-column: span 2;
   min-height: 430px;
@@ -544,6 +569,140 @@ h1 span {
   border: 1px solid rgba(17, 24, 39, 0.08);
   font-size: 12px;
   font-weight: 800;
+}
+
+.project-detail-link,
+.detail-action {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  margin-top: 18px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.project-detail-section {
+  scroll-margin-top: 108px;
+}
+
+.detail-page {
+  min-height: 100svh;
+  padding-top: 118px;
+}
+
+.detail-hero {
+  display: grid;
+  gap: 18px;
+}
+
+.detail-back-link {
+  width: fit-content;
+}
+
+.project-detail-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.project-detail-card {
+  display: grid;
+  gap: 22px;
+  padding: 30px;
+  border-radius: 32px;
+  color: var(--ink);
+  border: 1px solid var(--material-hairline);
+  scroll-margin-top: 108px;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.detail-meta span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.detail-action {
+  margin-top: 0;
+}
+
+.project-detail-card h1,
+.project-detail-card h3 {
+  max-width: 860px;
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(25px, 3vw, 38px);
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.project-detail-card > p {
+  max-width: 960px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.78;
+  font-weight: 560;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.78fr);
+  gap: 18px;
+}
+
+.detail-block {
+  min-width: 0;
+}
+
+.detail-block h4 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 900;
+}
+
+.detail-points {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.detail-points li {
+  min-width: 0;
+  padding: 13px 14px;
+  border-radius: 18px;
+  color: rgba(17, 24, 39, 0.8);
+  background: var(--material-subtle);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  font-size: 14px;
+  line-height: 1.58;
+  font-weight: 650;
+}
+
+.detail-evidence {
+  margin: 0;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .capability-grid {
@@ -733,6 +892,7 @@ h1 span {
   }
 
   .project-grid,
+  .detail-grid,
   .capability-grid,
   .evidence-panel,
   .intro-strip,
@@ -797,10 +957,24 @@ h1 span {
 
   .project-card,
   .project-card.featured,
+  .project-detail-card,
   .hero-panel,
   .evidence-panel,
   .contact-section {
     padding: 20px;
+  }
+
+  .detail-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .project-detail-link,
+  .detail-action,
+  .detail-back-link,
+  .detail-actions .primary-action,
+  .detail-actions .secondary-action {
+    width: 100%;
   }
 
   .commit-table div {

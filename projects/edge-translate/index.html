@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="description" content="EdgeTranslate-v3 프로젝트 상세 설명: MV3 번역 확장, 다중 번역 라우팅, IndexedDB 캐시, Preact 패널 UX." />
+    <title>EdgeTranslate-v3 — 박찬우 프로젝트 상세</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="/demo/styles.css" />
+  </head>
+  <body>
+    <div class="background-scene" aria-hidden="true">
+      <div class="scene-image"></div>
+      <div class="scene-grid"></div>
+      <div class="scene-wash"></div>
+    </div>
+
+    <header class="site-nav liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":"pill","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+      <a class="brand" href="../../#top" aria-label="박찬우 포트폴리오 홈">
+        <span class="brand-mark">PCW</span>
+        <span>Chanwoo Park</span>
+      </a>
+      <nav class="nav-links" aria-label="주요 섹션">
+        <a href="../../#projects">프로젝트</a>
+        <a href="../../#capabilities">역량</a>
+        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#contact">연락</a>
+      </nav>
+      <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
+    </header>
+
+    <main id="top" class="detail-page">
+      <section class="section-shell detail-hero">
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">프로젝트 목록으로</a>
+        <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32,"refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+          <div class="detail-meta">
+            <span>Browser & Web</span>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">GitHub 코드</a>
+          </div>
+          <h1>EdgeTranslate-v3: 실제 웹 페이지 번역을 견디는 MV3 라우팅</h1>
+          <p>
+            EdgeTranslate-v3는 페이지 번역을 단순 API 호출로 보지 않고, 브라우저 확장 안에서 여러 번역 경로와 UI 상태를 안정적으로 묶는 프로젝트입니다.
+            Google/Page Translate, AI Page Translate, Gemini Nano, Chrome Built-in, Local/OpenAI 호환 경로를 분리해 라우팅하고,
+            MV3 서비스 워커 환경에서도 IndexedDB 캐시와 Preact 패널 상태가 끊기지 않도록 설계했습니다.
+          </p>
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>구현 포인트</h4>
+              <ul class="detail-points">
+                <li>번역 provider를 기능별로 나눠 웹 페이지 번역, AI 번역, 로컬 호환 API를 같은 흐름에서 선택할 수 있게 구성했습니다.</li>
+                <li>IndexedDB 기반 영구 캐시, URL 해시 프리패치, TTL 정리를 붙여 MV3 제약 안에서도 반복 번역 비용을 줄였습니다.</li>
+                <li>Preact 패널은 streaming result, floating/fixed 모드, docking, drag velocity, TTS까지 실제 사용 장면에 맞춰 다듬었습니다.</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>코드 근거</h4>
+              <ul class="evidence-list detail-evidence">
+                <li><code>packages/EdgeTranslate/src/background/library/pageTranslate.js</code></li>
+                <li><code>packages/EdgeTranslate/src/background/library/translationPersistentCache.js</code></li>
+                <li><code>packages/EdgeTranslate/src/content/display/Panel.jsx</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">저장소 열기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#contact">연락 섹션 보기</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Chanwoo Park</span>
+      <span>Powered by a custom Liquid Glass engine.</span>
+    </footer>
+
+    <script type="module" src="/demo/demo.ts"></script>
+  </body>
+</html>

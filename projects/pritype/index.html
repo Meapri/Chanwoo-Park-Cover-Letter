@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="description" content="PriType-Swift 프로젝트 상세 설명: macOS InputMethodKit, libhangul, 한자 후보, Chromium/Electron 입력 예외 처리." />
+    <title>PriType-Swift — 박찬우 프로젝트 상세</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="/demo/styles.css" />
+  </head>
+  <body>
+    <div class="background-scene" aria-hidden="true">
+      <div class="scene-image"></div>
+      <div class="scene-grid"></div>
+      <div class="scene-wash"></div>
+    </div>
+
+    <header class="site-nav liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":"pill","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+      <a class="brand" href="../../#top" aria-label="박찬우 포트폴리오 홈">
+        <span class="brand-mark">PCW</span>
+        <span>Chanwoo Park</span>
+      </a>
+      <nav class="nav-links" aria-label="주요 섹션">
+        <a href="../../#projects">프로젝트</a>
+        <a href="../../#capabilities">역량</a>
+        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#contact">연락</a>
+      </nav>
+      <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
+    </header>
+
+    <main id="top" class="detail-page">
+      <section class="section-shell detail-hero">
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">프로젝트 목록으로</a>
+        <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32,"refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+          <div class="detail-meta">
+            <span>Apple Platform</span>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">GitHub 코드</a>
+          </div>
+          <h1>PriType-Swift: macOS 입력기 경계 조건까지 다루는 한글 IME</h1>
+          <p>
+            PriType-Swift는 InputMethodKit과 libhangul을 연결해 한글 조합, 한자 후보, 상태 관리, 업데이트 흐름을 구성한 macOS 입력기입니다.
+            특히 Chromium/Electron 기반 앱에서 흔히 나타나는 delegate 수명과 커서 좌표 문제를 예외 케이스로 분리해 입력 안정성을 높이는 방향으로 설계했습니다.
+          </p>
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>구현 포인트</h4>
+              <ul class="detail-points">
+                <li>IMKServer와 libhangul 조합 상태를 분리해 입력 모드와 조합 라이프사이클을 추적하기 쉽게 만들었습니다.</li>
+                <li>한자 사전 preload, 후보창, Right Option/Right Command 트리거를 입력기 경험 안에 연결했습니다.</li>
+                <li>Chromium/Electron 예외, cursor rect cache, force commit 처리를 별도 경로로 관리해 호환성 문제를 좁혔습니다.</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>코드 근거</h4>
+              <ul class="evidence-list detail-evidence">
+                <li><code>Sources/PriType/main.swift</code></li>
+                <li><code>Sources/PriTypeCore/HangulComposer.swift</code></li>
+                <li><code>Tests/PriTypeCoreTests</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">저장소 열기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">다른 프로젝트 보기</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Chanwoo Park</span>
+      <span>Powered by a custom Liquid Glass engine.</span>
+    </footer>
+
+    <script type="module" src="/demo/demo.ts"></script>
+  </body>
+</html>

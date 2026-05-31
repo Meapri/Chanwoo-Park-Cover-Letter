@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="description" content="MLX/VLM fork 실험 상세 설명: MLX-Swift, mlx-swift-lm, mlx-vlm 기반 모델 로드, QwenVL, OpenAI/Ollama 호환성 분석." />
+    <title>MLX/VLM fork experiments — 박찬우 프로젝트 상세</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="/demo/styles.css" />
+  </head>
+  <body>
+    <div class="background-scene" aria-hidden="true">
+      <div class="scene-image"></div>
+      <div class="scene-grid"></div>
+      <div class="scene-wash"></div>
+    </div>
+
+    <header class="site-nav liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":"pill","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+      <a class="brand" href="../../#top" aria-label="박찬우 포트폴리오 홈">
+        <span class="brand-mark">PCW</span>
+        <span>Chanwoo Park</span>
+      </a>
+      <nav class="nav-links" aria-label="주요 섹션">
+        <a href="../../#projects">프로젝트</a>
+        <a href="../../#capabilities">역량</a>
+        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#contact">연락</a>
+      </nav>
+      <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
+    </header>
+
+    <main id="top" class="detail-page">
+      <section class="section-shell detail-hero">
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">프로젝트 목록으로</a>
+        <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32,"refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+          <div class="detail-meta">
+            <span>ML Runtime</span>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">GitHub 코드</a>
+          </div>
+          <h1>MLX/VLM fork 실험: 모델 호환성의 내부 경로를 직접 읽는 작업</h1>
+          <p>
+            MLX-Swift, mlx-swift-lm, mlx-vlm 공개 fork에서는 Apple Silicon 로컬 AI 런타임의 내부 흐름을 분석하고 확장 실험을 진행했습니다.
+            모델 로드 계획, QwenVL 이미지 입력, Gemma4 MTP, tokenizer, KV cache, OpenAI/Ollama 호환 API가 어떻게 연결되는지
+            실제 코드 단위로 추적한 작업입니다.
+          </p>
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>구현 포인트</h4>
+              <ul class="detail-points">
+                <li>ModelLoadPlanner, GenerationRuntimePlan, GenerationSamplingPlan을 중심으로 추론 준비 과정을 구조화했습니다.</li>
+                <li>QwenVL prompt builder, image input planner, embedding merge 경로를 따라 멀티모달 입력 흐름을 확인했습니다.</li>
+                <li>CLI에서 OpenAI chat/completions/responses, Ollama generate/chat/embed, SSE streaming과 KV cache 경로를 실험했습니다.</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>코드 근거</h4>
+              <ul class="evidence-list detail-evidence">
+                <li><code>Sources/MLXVLMCore</code></li>
+                <li><code>Sources/MLXVLMCli/main.swift</code></li>
+                <li><code>mlx-swift-lm / mlx-vlm fork experiments</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">저장소 열기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">다른 프로젝트 보기</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Chanwoo Park</span>
+      <span>Powered by a custom Liquid Glass engine.</span>
+    </footer>
+
+    <script type="module" src="/demo/demo.ts"></script>
+  </body>
+</html>

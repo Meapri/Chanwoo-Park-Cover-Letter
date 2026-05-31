@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="description" content="Hermes Google Antigravity 프로젝트 상세 설명: OAuth/gRPC provider, Claude schema normalization, tool-call 상태 관리." />
+    <title>Hermes Antigravity — 박찬우 프로젝트 상세</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="/demo/styles.css" />
+  </head>
+  <body>
+    <div class="background-scene" aria-hidden="true">
+      <div class="scene-image"></div>
+      <div class="scene-grid"></div>
+      <div class="scene-wash"></div>
+    </div>
+
+    <header class="site-nav liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":"pill","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+      <a class="brand" href="../../#top" aria-label="박찬우 포트폴리오 홈">
+        <span class="brand-mark">PCW</span>
+        <span>Chanwoo Park</span>
+      </a>
+      <nav class="nav-links" aria-label="주요 섹션">
+        <a href="../../#projects">프로젝트</a>
+        <a href="../../#capabilities">역량</a>
+        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#contact">연락</a>
+      </nav>
+      <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
+    </header>
+
+    <main id="top" class="detail-page">
+      <section class="section-shell detail-hero">
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">프로젝트 목록으로</a>
+        <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32,"refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}'>
+          <div class="detail-meta">
+            <span>AI Agent Infra</span>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/hermes-google-antigravity-plugin" target="_blank" rel="noreferrer">GitHub 코드</a>
+          </div>
+          <h1>Hermes Antigravity: AI provider의 복잡한 경계를 정리하는 어댑터</h1>
+          <p>
+            hermes-google-antigravity-plugin은 Google Antigravity provider를 Hermes 흐름에 붙이기 위한 어댑터입니다.
+            OAuth/gRPC 경계, Claude-style 도구 스키마, streaming event, tool-call id, context compression처럼 실패하기 쉬운 부분을
+            한 계층에서 정규화해 에이전트 세션이 예측 가능하게 이어지도록 만들었습니다.
+          </p>
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>구현 포인트</h4>
+              <ul class="detail-points">
+                <li>ProjectContext와 stable session id를 기준으로 모델 응답과 도구 호출 상태를 이어 붙였습니다.</li>
+                <li>Claude schema 정규화, tool config validation, orphaned tool part cleanup을 adapter 경계에서 처리했습니다.</li>
+                <li>provider registry, model picker, WebUI catalog 패치를 signature verification 위에서 적용하도록 구성했습니다.</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>코드 근거</h4>
+              <ul class="evidence-list detail-evidence">
+                <li><code>agent/google_antigravity_adapter.py</code></li>
+                <li><code>patches/antigravity_provider_patch.py</code></li>
+                <li><code>plugins/model-providers/google-antigravity/plugin.yaml</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="https://github.com/Meapri/hermes-google-antigravity-plugin" target="_blank" rel="noreferrer">저장소 열기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light","refraction":"auto","thickness":"auto","blur":"auto","saturation":"auto"}' href="../../#projects">다른 프로젝트 보기</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Chanwoo Park</span>
+      <span>Powered by a custom Liquid Glass engine.</span>
+    </footer>
+
+    <script type="module" src="/demo/demo.ts"></script>
+  </body>
+</html>
