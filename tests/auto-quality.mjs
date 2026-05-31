@@ -40,7 +40,7 @@ const cases = [
     'balanced',
   ],
   [
-    'many visible Android card surfaces resolve to low',
+    'many visible Android card surfaces preserve balanced refraction with good headroom',
     {
       mobile: true,
       android: true,
@@ -53,7 +53,7 @@ const cases = [
       width: 360,
       height: 180,
     },
-    'low',
+    'balanced',
   ],
   [
     'weak high-DPR Android device resolves to low even with fewer surfaces',

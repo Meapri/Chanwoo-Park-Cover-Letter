@@ -18,6 +18,9 @@ const cases = [
   ['card class resolves to card', { className: 'feature-card', width: 360, height: 180, radius: 28 }, 'card'],
   ['long short geometry resolves to bar', { width: 900, height: 52, radius: 26, textLength: 64 }, 'bar'],
   ['small pill geometry resolves to control', { width: 96, height: 40, radius: 20, textLength: 8 }, 'control'],
+  ['wide chip class resolves to control', { className: 'stack-chip', width: 320, height: 52, radius: 999, textLength: 26 }, 'control'],
+  ['cta anchor class resolves to control', { tagName: 'a', className: 'primary-action', width: 240, height: 64, radius: 999, textLength: 18 }, 'control'],
+  ['badge aria label resolves to control', { ariaLabel: 'status badge', width: 132, height: 44, radius: 22, textLength: 20 }, 'control'],
   ['large block geometry resolves to panel', { width: 480, height: 340, radius: 32, textLength: 200 }, 'panel'],
   ['medium block geometry resolves to card', { width: 360, height: 180, radius: 28, textLength: 80 }, 'card'],
 ];

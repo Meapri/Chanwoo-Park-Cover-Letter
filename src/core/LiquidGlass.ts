@@ -327,6 +327,7 @@ let scrollSafeRestoreQueue: ScrollSafeRestoreTarget[] = [];
 let scrollSafeLastY = typeof window !== 'undefined' ? window.scrollY : 0;
 let scrollSafeLastAt = 0;
 let scrollSafePressureUntil = 0;
+let scrollSafeScrolling = false;
 let scrollSafeLongTaskObserver: PerformanceObserver | null = null;
 
 const SCROLL_SAFE_IDLE_MS = 320;
@@ -388,11 +389,6 @@ function updateScrollSafePressure(event?: Event): void {
   ) {
     extendScrollSafePressure();
   }
-}
-
-function currentScrollSafeActiveMode(event?: Event): Exclude<ScrollSafeMode, 'svg'> {
-  updateScrollSafePressure(event);
-  return 'frost';
 }
 
 function queueScrollSafeRestoreBatch(): void {
@@ -487,15 +483,21 @@ function notifyScrollSafe(mode: ScrollSafeMode): void {
 function armScrollSafeIdleTimer(): void {
   if (typeof window === 'undefined') return;
   if (scrollSafeEndTimer !== null) window.clearTimeout(scrollSafeEndTimer);
+  const pressureDelay = scrollSafePressureActive()
+    ? Math.max(SCROLL_SAFE_IDLE_MS, scrollSafePressureUntil - nowMs())
+    : SCROLL_SAFE_IDLE_MS;
   scrollSafeEndTimer = window.setTimeout(() => {
     scrollSafeEndTimer = null;
-    notifyScrollSafe('svg');
-  }, SCROLL_SAFE_IDLE_MS);
+    scrollSafeScrolling = false;
+    requestBackdropSample(true);
+  }, pressureDelay);
 }
 
 function beginScrollSafe(event?: Event): void {
   if (scrollSafeSubs.size === 0) return;
-  notifyScrollSafe(currentScrollSafeActiveMode(event));
+  updateScrollSafePressure(event);
+  scrollSafeScrolling = true;
+  cancelScrollSafeRestore();
   armScrollSafeIdleTimer();
 }
 
@@ -511,8 +513,7 @@ function setupScrollSafeLongTaskObserver(): void {
     scrollSafeLongTaskObserver = new PerformanceObserver((list) => {
       if (list.getEntries().length === 0) return;
       extendScrollSafePressure(SCROLL_SAFE_LONG_TASK_PRESSURE_MS);
-      if (scrollSafeMode !== 'svg') {
-        notifyScrollSafe('frost');
+      if (scrollSafeScrolling) {
         armScrollSafeIdleTimer();
       }
     });
@@ -577,7 +578,7 @@ function notifyBackdropSampleSubscribers(): void {
 
 function requestBackdropSample(force = false): void {
   if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') return;
-  if (scrollSafeMode !== 'svg' && !force) return;
+  if (scrollSafeScrolling && !force) return;
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const wait = BACKDROP_SAMPLE_INTERVAL_MS - (now - backdropSampleLastAt);
   if (!force && wait > 0) {
@@ -609,7 +610,7 @@ function subscribeBackdropSampling(fn: BackdropSampleSubscriber): () => void {
         if (backdropSampleIdleTimer !== null) window.clearTimeout(backdropSampleIdleTimer);
         backdropSampleIdleTimer = window.setTimeout(() => {
           backdropSampleIdleTimer = null;
-          if (scrollSafeMode !== 'svg') return;
+          if (scrollSafeScrolling) return;
           requestBackdropSample(true);
         }, BACKDROP_SAMPLE_IDLE_MS);
       },

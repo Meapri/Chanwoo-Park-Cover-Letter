@@ -78,14 +78,13 @@ export function resolveLiquidGlassAutoQuality(
   else if (cores <= 6) pressure += 1;
   if (dpr >= 3) pressure += 1.5;
   else if (dpr >= 2.5) pressure += 1;
-  if (visible >= 18) pressure += 3;
-  else if (visible >= 12) pressure += 2;
-  else if (visible >= 8) pressure += 1;
+  if (visible >= 24) pressure += 2;
+  else if (visible >= 14) pressure += 1;
 
   const profile = input.profile === 'auto' ? undefined : input.profile;
   const area = Math.max(0, input.width ?? 0) * Math.max(0, input.height ?? 0);
-  if ((profile === 'card' || profile === 'panel') && visible >= 8) pressure += 1;
-  if (area >= 110_000 && visible >= 6) pressure += 1;
+  if ((profile === 'card' || profile === 'panel') && visible >= 14) pressure += 1;
+  if (area >= 140_000 && visible >= 8) pressure += 1;
 
-  return pressure >= 5 ? 'low' : 'balanced';
+  return pressure >= 7 ? 'low' : 'balanced';
 }
