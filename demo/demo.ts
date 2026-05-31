@@ -3,6 +3,22 @@ import type { LiquidGlassOptions } from '../src';
 
 interface GlassConfig extends LiquidGlassOptions {}
 
+const autoChipGlass: LiquidGlassOptions = {
+  profile: 'auto',
+  preset: 'auto',
+  scheme: 'light',
+  radius: 'auto',
+  refraction: 'auto',
+  thickness: 'auto',
+  blur: 'auto',
+  saturation: 'auto',
+};
+
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.tag-row li, .stack-cloud li, .evidence-list li'))) {
+  el.classList.add('liquid-glass');
+  el.dataset.glass = JSON.stringify(autoChipGlass);
+}
+
 // Auto-apply LiquidGlass to every element with [data-glass]
 const instances = new Map<HTMLElement, LiquidGlass>();
 for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-glass]'))) {
