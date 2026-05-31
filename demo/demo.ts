@@ -8,6 +8,8 @@ const autoChipGlass: LiquidGlassOptions = {
   preset: 'vivid',
   scheme: 'light',
   radius: 'pill',
+  refraction: 54,
+  thickness: 48,
 };
 
 const autoControlGlass: LiquidGlassOptions = {
