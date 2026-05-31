@@ -3,6 +3,13 @@ import type { LiquidGlassOptions } from '../src';
 
 interface GlassConfig extends LiquidGlassOptions {}
 
+const autoChipGlass: LiquidGlassOptions = {
+  profile: 'auto',
+  preset: 'auto',
+  scheme: 'light',
+  radius: 'pill',
+};
+
 const autoControlGlass: LiquidGlassOptions = {
   profile: 'auto',
   preset: 'auto',
@@ -15,9 +22,13 @@ function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
   el.dataset.glass ||= JSON.stringify(config);
 }
 
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('.nav-action, .secondary-action, .project-detail-link, .detail-action'))) {
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.nav-action, .hero-actions .secondary-action, .project-detail-link, .detail-action, .detail-back-link, .detail-actions .secondary-action'))) {
   ensureGlass(el, autoControlGlass);
   el.classList.add('lg-interactive');
+}
+
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.stack-cloud li'))) {
+  ensureGlass(el, autoChipGlass);
 }
 
 for (const card of Array.from(document.querySelectorAll<HTMLElement>('[data-detail-href]'))) {
