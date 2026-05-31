@@ -15,6 +15,7 @@ const cases = [
   ['dialog role resolves to panel', { role: 'dialog', width: 460, height: 320, radius: 34 }, 'panel'],
   ['aside tag resolves to panel', { tagName: 'aside', width: 320, height: 720, radius: 24 }, 'panel'],
   ['article tag resolves to card', { tagName: 'article', width: 360, height: 200, radius: 28 }, 'card'],
+  ['large article geometry resolves to panel', { tagName: 'article', width: 620, height: 360, radius: 32 }, 'panel'],
   ['card class resolves to card', { className: 'feature-card', width: 360, height: 180, radius: 28 }, 'card'],
   ['long short geometry resolves to bar', { width: 900, height: 52, radius: 26, textLength: 64 }, 'bar'],
   ['small pill geometry resolves to control', { width: 96, height: 40, radius: 20, textLength: 8 }, 'control'],

@@ -38,7 +38,7 @@ import { enqueueBuild } from './BuildQueue';
 
 const VARIANT_TINT: Record<LiquidGlassVariant, { light: string; dark: string }> = {
   regular: {
-    light: 'rgba(255, 255, 255, 0.1)', // light, transparent — content shines through
+    light: 'rgba(255, 255, 255, 0.07)', // light, transparent — content shines through
     dark: 'rgba(0, 0, 0, 0.2)',
   },
   clear: {
@@ -47,7 +47,7 @@ const VARIANT_TINT: Record<LiquidGlassVariant, { light: string; dark: string }> 
   },
   tinted: {
     // Legacy shortcut. Official Apple guidance uses Regular/Clear plus tinting.
-    light: 'rgba(255, 255, 255, 0.26)',
+    light: 'rgba(255, 255, 255, 0.22)',
     dark: 'rgba(30, 30, 36, 0.42)',
   },
 };
@@ -73,10 +73,10 @@ const VARIANT_BLUR: Record<LiquidGlassVariant, number> = {
 const DEFAULT_OPTIONS: ResolvedOptions = {
   radius: 22, // Apple's standard corner radius
   thickness: 44, // lens depth — drives how pronounced/thick the edge lensing is
-  refraction: 46, // edge lensing strength (px) — concentrated at the border
+  refraction: 30, // edge lensing strength (px) — concentrated at the border
   chromaticAberration: 0.03,
   blur: 5, // light frost, backdrop reads through so the lensing is visible
-  saturation: 150, // gentle lift, backdrop stays close to natural
+  saturation: 142, // gentle lift, backdrop stays close to natural
   variant: 'regular',
   profile: 'auto',
   preset: 'auto',
@@ -247,6 +247,11 @@ const SUPPORTS_MOZ_ELEMENT =
   CSS.supports('background-image', '-moz-element(#lg)');
 
 let sceneIdCounter = 0;
+
+function resolveAutoNumber(value: number | 'auto' | undefined, fallback: number): number {
+  if (value === undefined || value === 'auto') return fallback;
+  return Number.isFinite(value) ? value : fallback;
+}
 
 /**
  * Relative luminance (0..1) of a CSS `backgroundColor`, or null when it's
@@ -1214,14 +1219,18 @@ export class LiquidGlass {
     }
 
     const variant = opts.variant ?? DEFAULT_OPTIONS.variant;
+    const thickness = resolveAutoNumber(opts.thickness, DEFAULT_OPTIONS.thickness);
+    const refraction = resolveAutoNumber(opts.refraction, DEFAULT_OPTIONS.refraction);
+    const blur = resolveAutoNumber(opts.blur, VARIANT_BLUR[variant]);
+    const saturation = resolveAutoNumber(opts.saturation, DEFAULT_OPTIONS.saturation);
 
     return {
       radius,
-      thickness: opts.thickness ?? DEFAULT_OPTIONS.thickness,
-      refraction: opts.refraction ?? DEFAULT_OPTIONS.refraction,
+      thickness,
+      refraction,
       chromaticAberration: opts.chromaticAberration ?? DEFAULT_OPTIONS.chromaticAberration,
-      blur: opts.blur ?? VARIANT_BLUR[variant],
-      saturation: opts.saturation ?? DEFAULT_OPTIONS.saturation,
+      blur,
+      saturation,
       variant,
       profile: opts.profile ?? DEFAULT_OPTIONS.profile,
       preset: opts.preset ?? DEFAULT_OPTIONS.preset,

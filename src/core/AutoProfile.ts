@@ -18,7 +18,7 @@ export function resolveLiquidGlassAutoProfile(
   input: LiquidGlassAutoProfileInput
 ): Exclude<LiquidGlassOpticalProfile, 'auto'> {
   const semantic = resolveSemanticProfile(input);
-  if (semantic) return semantic;
+  if (semantic && semantic !== 'card') return semantic;
 
   const short = Math.min(input.width, input.height);
   const long = Math.max(input.width, input.height);
@@ -29,6 +29,7 @@ export function resolveLiquidGlassAutoProfile(
   if (short <= 88 && aspect >= 4.5) return 'bar';
   if (short <= 92 && (radiusRatio > 0.42 || textLength <= 18)) return 'control';
   if (short >= 260 || (input.width * input.height > 140_000 && aspect < 4)) return 'panel';
+  if (semantic === 'card') return 'card';
   return 'card';
 }
 
