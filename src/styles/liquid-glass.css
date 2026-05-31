@@ -43,7 +43,7 @@
   background: radial-gradient(
     calc(34% + var(--lg-illum, 0) * 85%) circle
       at calc(var(--lg-illum-x, 0.5) * 100%) calc(var(--lg-illum-y, 0.5) * 100%),
-    rgba(255, 255, 255, 0.26),
+    rgba(255, 255, 255, 0.16),
     transparent 70%
   );
   z-index: 9;
@@ -65,11 +65,11 @@
   opacity: var(--lg-glow, 0);
   transition: opacity 220ms ease;
 
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   background: radial-gradient(
     220px circle at calc(var(--lg-pointer-x) * 100%) calc(var(--lg-pointer-y) * 100%),
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.5) 18%,
+    rgba(255, 255, 255, 0.68) 0%,
+    rgba(255, 255, 255, 0.3) 18%,
     transparent 46%
   ) border-box;
 

@@ -9,11 +9,11 @@
   --magenta: #c026d3;
   --amber: #d97706;
   --green: #0f9f6e;
-  --glass: rgba(255, 255, 255, 0.46);
-  --material-hairline: rgba(255, 255, 255, 0.34);
-  --material-subtle: rgba(255, 255, 255, 0.18);
-  --material-faint: rgba(255, 255, 255, 0.1);
-  --shadow: 0 18px 70px rgba(30, 41, 59, 0.16);
+  --glass: rgba(255, 255, 255, 0.1);
+  --material-hairline: rgba(255, 255, 255, 0.26);
+  --material-subtle: rgba(255, 255, 255, 0.12);
+  --material-faint: rgba(255, 255, 255, 0.06);
+  --shadow: 0 10px 36px rgba(30, 41, 59, 0.1);
 }
 
 * {
@@ -132,7 +132,7 @@ main,
   background: linear-gradient(135deg, var(--blue), var(--cyan) 55%, var(--magenta));
   font-size: 12px;
   letter-spacing: 0;
-  box-shadow: 0 8px 26px rgba(37, 99, 235, 0.28);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.18);
 }
 
 .nav-links {
@@ -164,8 +164,8 @@ main,
 
 .nav-action {
   color: #fff;
-  background: rgba(37, 99, 235, 0.56);
-  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.24);
+  background: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 5px 16px rgba(37, 99, 235, 0.16);
 }
 
 .hero-section {
@@ -244,7 +244,7 @@ h1 span {
   font-size: 15px;
   font-weight: 800;
   text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.42);
 }
 
 .primary-action {
@@ -255,13 +255,13 @@ h1 span {
 .primary-action.liquid-glass[data-adaptive],
 .primary-action.liquid-glass[data-adaptive][data-scheme='light'] {
   color: #fff;
-  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.28);
+  text-shadow: 0 1px 1px rgba(15, 23, 42, 0.2);
 }
 
 .secondary-action {
   color: var(--ink);
   background: var(--material-subtle);
-  border-color: rgba(17, 24, 39, 0.1);
+  border-color: rgba(17, 24, 39, 0.08);
 }
 
 .hero-panel {
@@ -278,7 +278,7 @@ h1 span {
   border-radius: 30px;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.12)),
     linear-gradient(120deg, rgba(8, 145, 178, 0.2), rgba(192, 38, 211, 0.14), rgba(217, 119, 6, 0.16));
 }
 
@@ -287,13 +287,13 @@ h1 span {
   width: 210px;
   height: 210px;
   border-radius: 36% 64% 58% 42% / 48% 36% 64% 52%;
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.34);
   background:
     linear-gradient(135deg, rgba(37, 99, 235, 0.42), rgba(8, 145, 178, 0.22) 42%, rgba(192, 38, 211, 0.28)),
-    rgba(255, 255, 255, 0.36);
+    rgba(255, 255, 255, 0.18);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 28px 80px rgba(37, 99, 235, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 16px 42px rgba(37, 99, 235, 0.13);
 }
 
 .portrait-initial {
@@ -303,7 +303,7 @@ h1 span {
   font-size: 34px;
   line-height: 1;
   font-weight: 900;
-  text-shadow: 0 8px 26px rgba(15, 23, 42, 0.28);
+  text-shadow: 0 4px 14px rgba(15, 23, 42, 0.22);
 }
 
 .identity-card {
@@ -548,7 +548,7 @@ h1 span {
 .capability-grid div {
   min-height: 190px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--material-faint);
   border-right: 1px solid rgba(17, 24, 39, 0.06);
   border-bottom: 1px solid rgba(17, 24, 39, 0.06);
 }
@@ -606,7 +606,7 @@ h1 span {
   height: 10px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--blue), var(--cyan));
-  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.07);
 }
 
 .timeline time,

@@ -38,7 +38,7 @@ import { enqueueBuild } from './BuildQueue';
 
 const VARIANT_TINT: Record<LiquidGlassVariant, { light: string; dark: string }> = {
   regular: {
-    light: 'rgba(255, 255, 255, 0.14)', // light, transparent — content shines through
+    light: 'rgba(255, 255, 255, 0.1)', // light, transparent — content shines through
     dark: 'rgba(0, 0, 0, 0.2)',
   },
   clear: {
@@ -47,7 +47,7 @@ const VARIANT_TINT: Record<LiquidGlassVariant, { light: string; dark: string }> 
   },
   tinted: {
     // Legacy shortcut. Official Apple guidance uses Regular/Clear plus tinting.
-    light: 'rgba(255, 255, 255, 0.32)',
+    light: 'rgba(255, 255, 255, 0.26)',
     dark: 'rgba(30, 30, 36, 0.42)',
   },
 };
@@ -75,7 +75,7 @@ const DEFAULT_OPTIONS: ResolvedOptions = {
   thickness: 44, // lens depth — drives how pronounced/thick the edge lensing is
   refraction: 46, // edge lensing strength (px) — concentrated at the border
   chromaticAberration: 0.03,
-  blur: 7, // light frost, backdrop reads through so the lensing is visible
+  blur: 5, // light frost, backdrop reads through so the lensing is visible
   saturation: 150, // gentle lift, backdrop stays close to natural
   variant: 'regular',
   profile: 'auto',
@@ -93,7 +93,7 @@ const DEFAULT_OPTIONS: ResolvedOptions = {
   lazy: false,
   lazyMargin: '200px',
   root: null,
-  fallbackFilter: 'blur(20px) saturate(1.8)',
+  fallbackFilter: 'blur(16px) saturate(1.65)',
   respectReducedMotion: true,
 };
 
@@ -158,7 +158,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 0.3,
     blur: 0.95,
     specular: 0.5,
-    shadow: 0.7,
+    shadow: 0.48,
     blurReferenceShortSide: 150,
     minBlurScale: 0.72,
   },
@@ -170,7 +170,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 0.9,
     blur: 0.75,
     specular: 1.0,
-    shadow: 0.65,
+    shadow: 0.46,
     blurReferenceShortSide: 140,
     minBlurScale: 0.45,
   },
@@ -180,7 +180,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 1,
     blur: 1,
     specular: 1,
-    shadow: 1,
+    shadow: 0.62,
     blurReferenceShortSide: DEFAULT_SURFACE_REFERENCE_SHORT_SIDE,
     minBlurScale: DEFAULT_MIN_SIZE_BLUR_SCALE,
   },
@@ -192,7 +192,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 1.18,
     blur: 1.15,
     specular: 1.12,
-    shadow: 1.5,
+    shadow: 0.82,
     blurReferenceShortSide: 260,
     minBlurScale: 0.5,
   },
@@ -203,7 +203,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 0.88,
     blur: 0.9,
     specular: 1,
-    shadow: 0.6,
+    shadow: 0.44,
     blurReferenceShortSide: 150,
     minBlurScale: 0.55,
   },
@@ -1007,13 +1007,13 @@ export class LiquidGlass {
     if (!this.options.edges) return;
     const dark = this.resolveScheme() === 'dark';
     const s = this.opticalTuning().shadow;
-    const oy = (4 * s).toFixed(1);
-    const blur = (12 * s).toFixed(1);
+    const oy = (3 * s).toFixed(1);
+    const blur = (8 * s).toFixed(1);
     // Depth scales with the profile; opacity also follows the backdrop (more over
     // dark/busy content, less over a solid light background) via shadowAdapt.
-    const baseAlpha = dark ? 0.22 : 0.085;
+    const baseAlpha = dark ? 0.16 : 0.055;
     const alpha = Math.min(
-      dark ? 0.44 : 0.2,
+      dark ? 0.3 : 0.12,
       baseAlpha * Math.pow(s, 0.7) * this.shadowAdapt
     ).toFixed(3);
     const float = dark
@@ -1022,8 +1022,8 @@ export class LiquidGlass {
     // Whisper-thin baseline border + a faint top sheen — the bright edge itself
     // comes from the baked specular rim and the pointer-tracked light.
     const inset = dark
-      ? 'inset 0 0 0 0.5px rgba(255,255,255,0.07), inset 0 1.5px 2px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.16)'
-      : 'inset 0 0 0 0.5px rgba(255,255,255,0.1), inset 0 1.5px 2px rgba(255,255,255,0.18), inset 0 -3px 6px rgba(0,0,0,0.06)';
+      ? 'inset 0 0 0 0.5px rgba(255,255,255,0.055), inset 0 1px 1.5px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.12)'
+      : 'inset 0 0 0 0.5px rgba(255,255,255,0.07), inset 0 1px 1.5px rgba(255,255,255,0.11), inset 0 -2px 4px rgba(0,0,0,0.04)';
     this.element.style.boxShadow = `${inset}, ${float}`;
   }
 
