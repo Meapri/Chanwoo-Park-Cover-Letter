@@ -76,7 +76,7 @@ npm test               # typecheck + auto-profile/auto-quality 테스트
 - `DeviceProfile`과 `quality: "auto"` 흐름은 모바일과 Android 같은 환경에서 고비용 효과를 조정합니다.
 - `WebGLRefractor`와 SVG filter 경로는 가능한 환경에서 굴절감을 보강하고, 지원이 약한 환경에서는 안전하게 내려갑니다.
 - `MapCache`는 같은 크기의 요소가 동일한 맵을 재사용하게 해 초기화 비용을 줄입니다.
-- `LiquidInteractive`는 `.lg-interactive` 요소에 pointer tilt, glare, press morph를 붙입니다.
+- 이 포트폴리오에서는 과한 pointer tilt를 끄고, 클릭 가능한 요소의 glass highlight와 포커스만 유지합니다.
 - 비지원 환경이나 reduced transparency 설정에서는 CSS `fallbackFilter`로 내려갑니다.
 
 실제 페이지의 선언 예시는 아래처럼 단순하게 유지했습니다.

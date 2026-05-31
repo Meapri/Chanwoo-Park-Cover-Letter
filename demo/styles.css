@@ -251,6 +251,12 @@ h1 span {
   color: #fff;
 }
 
+.lg-interactive,
+.lg-interactive:hover,
+.lg-interactive:active {
+  transform: none;
+}
+
 .primary-action.liquid-glass,
 .primary-action.liquid-glass[data-adaptive],
 .primary-action.liquid-glass[data-adaptive][data-scheme='light'] {

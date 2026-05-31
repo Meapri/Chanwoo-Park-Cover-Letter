@@ -1,4 +1,4 @@
-import { LiquidGlass, LiquidInteractive } from '../src';
+import { LiquidGlass } from '../src';
 import type { LiquidGlassOptions } from '../src';
 
 interface GlassConfig extends LiquidGlassOptions {}
@@ -59,9 +59,6 @@ for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-glass]
   }
   instances.set(el, new LiquidGlass(el, config));
 }
-
-// Initialize Interactive Elements
-LiquidInteractive.initAll();
 
 // Dynamic Background Observer removed as requested
 
