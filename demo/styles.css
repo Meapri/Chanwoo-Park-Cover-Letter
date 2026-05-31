@@ -149,6 +149,7 @@ main,
   justify-content: center;
   gap: 8px;
   margin-left: auto;
+  min-width: 0;
 }
 
 .nav-links a,
@@ -418,6 +419,10 @@ h1 span {
 .section-shell {
   width: min(1180px, calc(100vw - 32px));
   margin: 0 auto 112px;
+}
+
+.section-shell[id] {
+  scroll-margin-top: 128px;
 }
 
 .intro-strip {
@@ -1073,15 +1078,52 @@ h1 span {
   .site-nav {
     width: calc(100vw - 20px);
     top: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 10px 12px 12px;
+    border-radius: 30px;
   }
 
   .nav-links {
+    order: 3;
+    flex: 1 0 100%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-left: 0;
+    padding: 2px 2px 0;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-links::-webkit-scrollbar {
     display: none;
+  }
+
+  .nav-links a {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    font-size: 13px;
+    scroll-snap-align: start;
+  }
+
+  .nav-action {
+    margin-left: auto;
   }
 
   .hero-section {
     grid-template-columns: 1fr;
-    padding-top: 116px;
+    padding-top: 166px;
+  }
+
+  .section-shell[id] {
+    scroll-margin-top: 142px;
   }
 
   .hero-panel {
@@ -1140,7 +1182,8 @@ h1 span {
 
   .site-nav {
     gap: 10px;
-    padding-left: 12px;
+    padding: 10px;
+    border-radius: 26px;
   }
 
   .brand span:last-child {
@@ -1149,16 +1192,34 @@ h1 span {
 
   .nav-action {
     margin-left: auto;
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 13px;
+  }
+
+  .nav-links {
+    gap: 6px;
+  }
+
+  .nav-links a {
+    min-height: 34px;
+    padding: 0 11px;
+    font-size: 12.5px;
   }
 
   .hero-section {
     width: min(100% - 24px, 1180px);
+    padding-top: 154px;
     padding-bottom: 56px;
   }
 
   .section-shell {
     width: min(100% - 24px, 1180px);
     margin-bottom: 76px;
+  }
+
+  .section-shell[id] {
+    scroll-margin-top: 132px;
   }
 
   h1 {
