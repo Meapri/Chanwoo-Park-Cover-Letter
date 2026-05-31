@@ -10,7 +10,7 @@
     <meta property="og:title" content="박찬우 — Software Engineer Portfolio" />
     <meta
       property="og:description"
-      content="복잡한 시스템을 설계하고 실행 가능한 소프트웨어로 증명하는 엔지니어, 박찬우입니다."
+      content="브라우저 UX부터 런타임 환경까지 실제 코드로 문제를 정리하는 엔지니어, 박찬우입니다."
     />
     <meta property="og:type" content="website" />
     <title>박찬우 — Software Engineer Portfolio</title>
@@ -53,16 +53,16 @@
     <main id="top">
       <section class="hero-section">
         <div class="hero-copy">
-          <p class="section-kicker">브라우저 UX부터 런타임 환경까지 파고드는 엔지니어</p>
+          <p class="section-kicker">브라우저 UX부터 런타임 환경까지 코드로 확인하는 엔지니어</p>
           <h1>
-            경계를 넘나드는<br />
-            시스템을 설계하고<br />
-            <span>구현합니다.</span>
+            복잡한 경계를<br />
+            실제 동작하는 코드로<br />
+            <span>정리합니다.</span>
           </h1>
           <p class="hero-lede">
             브라우저 확장의 번역 UX, 웹용 Liquid Glass 렌더링, macOS 한글 입력기,
             AI 프로바이더와 런타임 호환성, Android 안의 Linux/glibc 런타임 실험까지.
-            관심 있는 기술을 나열하는 데서 멈추지 않고, 실제 코드와 테스트로 동작을 확인하며 문제를 해결합니다.
+            관심 있는 기술을 나열하기보다, 문제를 작게 나누고 실제 코드와 테스트로 동작을 확인하며 해결합니다.
           </p>
           <div class="hero-actions" aria-label="주요 행동">
             <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="#projects">
@@ -112,18 +112,18 @@
       <section class="section-shell intro-strip liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":26}'>
         <div>
           <span>코드 단위로 확인한 강점</span>
-          <strong>UX와 시스템의 경계를 연결합니다</strong>
+          <strong>사용자 경험과 시스템 내부를 함께 봅니다</strong>
         </div>
         <p>
           주요 프로젝트는 공개 저장소의 실제 코드를 바탕으로 정리했습니다.
-          TypeScript, Swift, Python, C++, Kotlin을 오가며 렌더링, 입력기, AI 호환성, 런타임, PostgreSQL 기반 데이터 파이프라인을 다룹니다.
+          TypeScript, Swift, Python, C++, Kotlin을 오가며 렌더링, 입력기, AI 호환성, 런타임, 데이터 파이프라인을 다룹니다.
         </p>
       </section>
 
       <section id="projects" class="section-shell">
         <div class="section-heading">
           <p class="section-kicker">대표 프로젝트</p>
-          <h2>README가 아니라 실제 소스 경로로 증명한 결과물</h2>
+          <h2>README 요약이 아니라 실제 소스 경로로 설명한 결과물</h2>
           <p>
             공개 원본 저장소와 공개 fork를 코드 단위로 다시 확인해,
             문제 영역과 구현 깊이가 바로 보이도록 정리했습니다.
@@ -138,8 +138,8 @@
             </div>
             <h3>MV3 번역 확장과 다중 번역 라우팅</h3>
             <p>
-              Google/Page Translate, AI Page Translate, Gemini Nano, Chrome Built-in, Local/OpenAI 호환 번역 경로를
-              하나의 확장 안에서 라우팅합니다. IndexedDB 기반 MV3 캐시와 Preact 패널 모션까지 묶어 실제 웹 사용 흐름을 다듬었습니다.
+              Manifest V3 환경에서 Google/Page Translate, AI Page Translate, Gemini Nano, Chrome Built-in, Local/OpenAI 호환 번역 경로를
+              하나의 흐름으로 라우팅합니다. IndexedDB 캐시와 Preact 패널 상태까지 함께 다뤄 실제 페이지 번역 UX를 안정적으로 만듭니다.
             </p>
             <ul class="evidence-list">
               <li><code>packages/translators/src/translators/local.ts</code></li>
@@ -158,8 +158,8 @@
             </div>
             <h3>웹용 리퀴드 글라스 엔진</h3>
             <p>
-              DOM 요소마다 SVG <code>feDisplacementMap</code>, displacement map, specular map,
-              auto profile/preset, MapCache를 결합해 단순 반투명 박스가 아닌 실제 유리 질감을 구성했습니다.
+              DOM 요소마다 SVG <code>feDisplacementMap</code>, WebGL refraction, displacement/specular map,
+              auto profile/preset, MapCache를 결합해 단순 blur가 아닌 재사용 가능한 유리 소재를 만듭니다.
             </p>
             <ul class="tag-row">
               <li>TypeScript</li>
@@ -198,8 +198,8 @@
             </div>
             <h3>Google Antigravity provider 플러그인</h3>
             <p>
-              OAuth/gRPC API 경계, Claude 도구 스키마 정규화, tool-call id 보정,
-              context compression, 모델 피커와 WebUI catalog 패치를 안전한 signature 검증 위에서 연결했습니다.
+              OAuth/gRPC provider 경계, Claude 도구 스키마 정규화, tool-call id 보정,
+              context compression, 모델 피커와 WebUI catalog 패치를 signature 검증 흐름 위에서 연결했습니다.
             </p>
             <ul class="tag-row">
               <li>Python</li>
@@ -219,7 +219,7 @@
             <h3>MLX/VLM fork 기반 호환성 실험</h3>
             <p>
               MLX-Swift, mlx-swift-lm, mlx-vlm 공개 fork에서 모델 로드 계획, QwenVL/Gemma4 MTP,
-              KV cache, OpenAI/Ollama 호환 서버, tokenization 경로를 분석하고 확장한 실험입니다.
+              KV cache, OpenAI/Ollama 호환 서버, tokenization 경로를 분석하고 확장한 호환성 실험입니다.
             </p>
             <ul class="tag-row">
               <li>Swift</li>
@@ -239,7 +239,7 @@
             <h3>Rootless Android Linux/glibc 런타임 실험</h3>
             <p>
               Android 앱 내부의 app-private rootfs에서 Linux/glibc arm64 실행을 실험합니다.
-              clean-room 프로토콜, JNI runtime report, ALR 실행 계획, rootfs 안전 추출, GPU bridge 테스트를 함께 설계했습니다.
+              clean-room 프로토콜, JNI runtime report, ALR 실행 계획, rootfs 안전 추출, GPU bridge 테스트를 한 흐름으로 정리했습니다.
             </p>
             <ul class="tag-row">
               <li>C++</li>
@@ -256,7 +256,7 @@
       <section id="capabilities" class="section-shell capabilities-section">
         <div class="section-heading">
           <p class="section-kicker">핵심 역량</p>
-          <h2>한 영역만 파는 개발자가 아니라, 경계를 연결하는 개발자</h2>
+          <h2>여러 계층을 연결해 문제를 끝까지 추적합니다</h2>
         </div>
         <div class="capability-grid liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":30}'>
           <div>
@@ -305,7 +305,7 @@
       <section id="evidence" class="section-shell evidence-section">
         <div class="section-heading">
           <p class="section-kicker">코드 근거</p>
-          <h2>최근 저장소에서 반복해서 확인되는 작업 방식</h2>
+          <h2>최근 저장소에서 반복해서 드러나는 작업 방식</h2>
         </div>
         <div class="evidence-panel liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32}'>
           <ol class="timeline">
@@ -343,7 +343,7 @@
       <section id="contact" class="section-shell contact-section liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":34}'>
         <div>
           <p class="section-kicker">함께 만들고 싶습니다</p>
-          <h2>실험을 제품 품질로 바꾸는 팀이라면, 바로 대화하고 싶습니다.</h2>
+          <h2>실험을 실제 제품 품질로 다듬는 팀과 함께하고 싶습니다.</h2>
           <p>
             기능을 구현하는 데서 멈추지 않고, 코드가 맞닿는 API와 OS, 런타임의 경계를 깊이 확인합니다.
             이를 바탕으로 사용자에게 닿는 경험의 디테일과 유지보수하기 좋은 구조를 함께 다듬어 나갑니다.

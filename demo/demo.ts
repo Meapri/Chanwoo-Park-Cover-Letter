@@ -22,7 +22,7 @@ function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
   el.dataset.glass ||= JSON.stringify(config);
 }
 
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('.tag-row li, .stack-cloud li, .evidence-list li, .detail-points li'))) {
+for (const el of Array.from(document.querySelectorAll<HTMLElement>('.tag-row li, .stack-cloud li, .evidence-list li, .detail-points li, .detail-fact, .detail-narrative-section'))) {
   ensureGlass(el, autoChipGlass);
 }
 

@@ -42,15 +42,32 @@
           <h1>liquid-glass-web: 반투명 박스가 아니라 요소별 렌즈를 만드는 엔진</h1>
           <p>
             이 포트폴리오의 UI는 직접 만든 Liquid Glass 엔진 위에서 움직입니다.
-            DOM 요소마다 SVG filter와 backdrop-filter를 결합하고, 표면 노멀과 displacement/specular map을 생성해
-            카드, 버튼, 칩, 패널이 각자 다른 두께와 굴절감을 갖도록 구성했습니다.
+            DOM 요소마다 SVG filter와 backdrop-filter, WebGL refraction 경로를 결합하고,
+            표면 노멀과 displacement/specular map을 생성해 카드, 버튼, 칩, 패널이 각자 다른 두께와 굴절감을 갖도록 구성했습니다.
           </p>
+          <div class="detail-summary-grid">
+            <div class="detail-fact">
+              <span>문제 영역</span>
+              <strong>단순 blur가 아닌 렌즈 질감</strong>
+              <p>배경을 흐리게 덮는 수준을 넘어, 요소의 곡률과 가장자리 굴절이 UI 소재처럼 읽히게 만드는 문제입니다.</p>
+            </div>
+            <div class="detail-fact">
+              <span>설계 초점</span>
+              <strong>요소별 optical profile 자동화</strong>
+              <p>bar, control, card, panel, selection을 크기와 의미로 분류해 각 요소에 맞는 두께와 굴절 품질을 계산합니다.</p>
+            </div>
+            <div class="detail-fact">
+              <span>확인 포인트</span>
+              <strong>성능과 fallback까지 포함한 엔진</strong>
+              <p>DeviceProfile, lazy init, WebGL refractor, SVG fallback을 함께 두어 실제 페이지와 모바일 환경까지 고려했습니다.</p>
+            </div>
+          </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
                 <li>요소의 크기, radius, semantic role을 읽어 bar, control, card, panel, selection 프로파일을 자동으로 선택합니다.</li>
-                <li>FilterChain에서 <code>feImage</code>, <code>feDisplacementMap</code>, specular map을 조합해 가장자리 중심의 굴절감을 만듭니다.</li>
+                <li><code>FilterChain.ts</code>에서 <code>feImage</code>, <code>feDisplacementMap</code>, specular map을 조합해 가장자리 중심의 굴절감을 만듭니다.</li>
                 <li>lazy init, fallback, adaptive scheme, content-aware shadow를 엔진 라이프사이클 안에 넣어 실제 페이지에서 사용할 수 있게 했습니다.</li>
               </ul>
             </div>
@@ -62,6 +79,20 @@
                 <li><code>src/core/AutoProfile.ts</code></li>
               </ul>
             </div>
+          </div>
+          <div class="detail-narrative">
+            <section class="detail-narrative-section">
+              <h4>왜 이 레포가 중요한가</h4>
+              <p>Liquid Glass는 CSS 효과 하나로 끝나지 않습니다. 표면의 곡률, 반사광, 굴절, fallback, 상호작용 모션이 함께 맞아야 UI 소재로 읽힙니다. 이 레포는 그 요소들을 웹에서 재사용 가능한 엔진 API로 만든 작업입니다.</p>
+            </section>
+            <section class="detail-narrative-section">
+              <h4>구조를 읽는 방법</h4>
+              <p><code>LiquidGlass.ts</code>가 생명주기와 옵션 해석을 맡고, <code>FilterChain.ts</code>가 SVG filter를 구성하며, map 계층이 displacement/specular 이미지를 캐싱합니다. 최신 공식 엔진에는 모바일 품질 조절과 WebGL 기반 refraction 경로도 포함됩니다.</p>
+            </section>
+            <section class="detail-narrative-section">
+              <h4>채용 관점의 의미</h4>
+              <p>시각적 완성도만이 아니라 브라우저 렌더링 제약, GPU 비용, 접근성 설정, 모바일 품질 저하 조건까지 함께 다루는 능력을 보여줍니다. 디자인 의도를 실제 엔진 구현으로 연결한 대표 레포입니다.</p>
+            </section>
           </div>
           <div class="detail-actions">
             <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/liquid-glass-web" target="_blank" rel="noreferrer">저장소 열기</a>

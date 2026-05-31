@@ -45,11 +45,28 @@
             clean-room 문서, JNI runtime report, EGL/GLES pbuffer, Android Surface, ALR 실행 계획, rootfs 안전 추출과 GPU bridge 테스트를
             함께 묶어 런타임 경계가 실제로 어디서 깨지는지 확인합니다.
           </p>
+          <div class="detail-summary-grid">
+            <div class="detail-fact">
+              <span>문제 영역</span>
+              <strong>Android 샌드박스 안의 Linux/glibc 실행</strong>
+              <p>root 권한 없이 app-private rootfs, native binary 실행, 동적 라이브러리 로드, 그래픽스 출력을 함께 다뤄야 합니다.</p>
+            </div>
+            <div class="detail-fact">
+              <span>설계 초점</span>
+              <strong>clean-room 문서와 런타임 계층 분리</strong>
+              <p>요구사항과 구현 경계를 문서화하고, ALR runtime을 config, path, env, exec, hook, interposer, trampoline으로 나눴습니다.</p>
+            </div>
+            <div class="detail-fact">
+              <span>확인 포인트</span>
+              <strong>설치부터 GPU bridge까지 이어지는 검증</strong>
+              <p>rootfs safe extraction, runtime launch plan, JNI report, EGL/GLES probe, Android Surface rendering을 함께 확인합니다.</p>
+            </div>
+          </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
-                <li>C++ JNI 계층에서 runtime report, EGL/GLES probe, Surface rendering, <code>dlopen</code> probe를 분리했습니다.</li>
+                <li><code>runtime_report.cpp</code>의 C++ JNI 계층에서 runtime report, EGL/GLES probe, Surface rendering, <code>dlopen</code> probe를 분리했습니다.</li>
                 <li>alr_runtime의 config, path, env, exec, hook, interposer, trampoline 계층으로 실행 계획을 나눴습니다.</li>
                 <li>Kotlin 쪽 RootfsInstaller, RootfsInstallPlan, NativeCommandRunner로 안전 추출과 실행 흐름을 관리했습니다.</li>
               </ul>
@@ -62,6 +79,20 @@
                 <li><code>app/src/main/java/dev/chanwoo/androlinux</code></li>
               </ul>
             </div>
+          </div>
+          <div class="detail-narrative">
+            <section class="detail-narrative-section">
+              <h4>왜 이 레포가 중요한가</h4>
+              <p>Android 앱 안에서 Linux/glibc 런타임을 다루려면 OS 샌드박스, 파일 시스템 경로, 동적 링킹, native 실행, 그래픽스 출력이 모두 연결되어야 합니다. Plib는 그 경계를 문서와 코드로 나눠 실제로 어디서 깨지는지 확인하는 실험입니다.</p>
+            </section>
+            <section class="detail-narrative-section">
+              <h4>구조를 읽는 방법</h4>
+              <p>먼저 <code>docs/product-requirements.md</code>와 <code>clean-room-protocol.md</code>에서 제약을 확인하고, Kotlin 설치 흐름에서 rootfs가 준비되는 과정을 보면 좋습니다. 그다음 <code>alr_runtime</code>과 <code>runtime_report.cpp</code>를 보면 native 실행과 GPU bridge가 이어집니다.</p>
+            </section>
+            <section class="detail-narrative-section">
+              <h4>채용 관점의 의미</h4>
+              <p>앱 레벨 UI를 넘어 Android NDK, C++ 런타임, Linux 실행 모델, 그래픽스 bridge를 함께 읽는 경험입니다. 제약이 강한 환경에서 문제를 쪼개고 검증 가능한 경계로 만드는 방식이 잘 드러납니다.</p>
+            </section>
           </div>
           <div class="detail-actions">
             <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/Plib" target="_blank" rel="noreferrer">저장소 열기</a>

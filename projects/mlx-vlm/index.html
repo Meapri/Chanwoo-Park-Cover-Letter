@@ -45,11 +45,28 @@
             모델 로드 계획, QwenVL 이미지 입력, Gemma4 MTP, tokenizer, KV cache, OpenAI/Ollama 호환 API가 어떻게 연결되는지
             실제 코드 단위로 추적한 작업입니다.
           </p>
+          <div class="detail-summary-grid">
+            <div class="detail-fact">
+              <span>문제 영역</span>
+              <strong>로컬 AI 런타임의 호환성 경계</strong>
+              <p>모델 로드, tokenizer, 멀티모달 입력, KV cache, 외부 API 호환이 각기 다른 계층에서 맞물립니다.</p>
+            </div>
+            <div class="detail-fact">
+              <span>설계 초점</span>
+              <strong>공개 fork 기반 분석과 확장 실험</strong>
+              <p>원본 프레임워크의 구조를 존중하면서 OpenAI/Ollama 호환 타입과 스트리밍 응답 경로를 실험했습니다.</p>
+            </div>
+            <div class="detail-fact">
+              <span>확인 포인트</span>
+              <strong>VLM 입력부터 서버 응답까지의 연결</strong>
+              <p>QwenVL prompt/image planning, embedding merge, generation plan, SSE streaming이 어떻게 이어지는지 확인했습니다.</p>
+            </div>
+          </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
-                <li>ModelLoadPlanner, GenerationRuntimePlan, GenerationSamplingPlan을 중심으로 추론 준비 과정을 구조화했습니다.</li>
+                <li><code>MLXVLMCore</code>의 ModelLoadPlanner, GenerationRuntimePlan, GenerationSamplingPlan을 중심으로 추론 준비 과정을 추적했습니다.</li>
                 <li>QwenVL prompt builder, image input planner, embedding merge 경로를 따라 멀티모달 입력 흐름을 확인했습니다.</li>
                 <li>CLI에서 OpenAI chat/completions/responses, Ollama generate/chat/embed, SSE streaming과 KV cache 경로를 실험했습니다.</li>
               </ul>
@@ -62,6 +79,20 @@
                 <li><code>mlx-swift-lm / mlx-vlm fork experiments</code></li>
               </ul>
             </div>
+          </div>
+          <div class="detail-narrative">
+            <section class="detail-narrative-section">
+              <h4>왜 이 레포가 중요한가</h4>
+              <p>로컬 AI 런타임은 모델 실행만으로 끝나지 않습니다. 외부 앱이 기대하는 OpenAI/Ollama 형태의 API, 멀티모달 입력 전처리, 스트리밍 응답, 캐시 상태가 함께 맞아야 실제 도구로 쓸 수 있습니다.</p>
+            </section>
+            <section class="detail-narrative-section">
+              <h4>구조를 읽는 방법</h4>
+              <p><code>MLXVLMCore</code>에서 모델 로드와 generation plan을 먼저 따라가고, QwenVL 계층에서 이미지 입력이 프롬프트와 임베딩으로 합쳐지는 흐름을 보면 좋습니다. 이후 CLI와 호환 API 타입을 보면 서버 경계가 드러납니다.</p>
+            </section>
+            <section class="detail-narrative-section">
+              <h4>채용 관점의 의미</h4>
+              <p>낯선 오픈소스 코드베이스를 빠르게 읽고, 기존 구조를 해치지 않는 방식으로 호환성 실험을 진행한 경험입니다. AI 런타임 내부와 제품 API 경계를 함께 이해하는 역량을 보여줍니다.</p>
+            </section>
           </div>
           <div class="detail-actions">
             <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">저장소 열기</a>

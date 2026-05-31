@@ -657,6 +657,48 @@ h1 span {
   font-weight: 560;
 }
 
+.detail-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-fact {
+  min-width: 0;
+  padding: 16px;
+  border-radius: 22px;
+  color: var(--ink);
+  border: 1px solid var(--material-hairline);
+}
+
+.detail-fact span,
+.detail-fact strong,
+.detail-fact p {
+  display: block;
+}
+
+.detail-fact span {
+  color: var(--blue);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.detail-fact strong {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.detail-fact p {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  font-weight: 620;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.78fr);
@@ -697,6 +739,36 @@ h1 span {
 
 .detail-evidence {
   margin: 0;
+}
+
+.detail-narrative {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-narrative-section {
+  min-width: 0;
+  padding: 18px;
+  border-radius: 22px;
+  color: var(--ink);
+  border: 1px solid var(--material-hairline);
+}
+
+.detail-narrative-section h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.detail-narrative-section p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 560;
 }
 
 .detail-actions {
@@ -892,7 +964,9 @@ h1 span {
   }
 
   .project-grid,
+  .detail-summary-grid,
   .detail-grid,
+  .detail-narrative,
   .capability-grid,
   .evidence-panel,
   .intro-strip,
