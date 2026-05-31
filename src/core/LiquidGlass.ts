@@ -304,10 +304,62 @@ const scrollSafeSubs = new Set<ScrollSafeSubscriber>();
 let scrollSafeBound = false;
 let scrollSafeActive = false;
 let scrollSafeEndTimer: number | null = null;
+let scrollSafeRestoreRaf = 0;
+let scrollSafeRestoreQueue: ScrollSafeSubscriber[] = [];
+
+const SCROLL_SAFE_IDLE_MS = 180;
+const SCROLL_SAFE_RESTORE_BATCH = 4;
+
+function cancelScrollSafeRestore(): void {
+  if (scrollSafeRestoreRaf) {
+    cancelAnimationFrame(scrollSafeRestoreRaf);
+    scrollSafeRestoreRaf = 0;
+  }
+  scrollSafeRestoreQueue = [];
+}
+
+function runScrollSafeRestoreBatch(): void {
+  scrollSafeRestoreRaf = 0;
+  const batch = scrollSafeRestoreQueue.splice(0, SCROLL_SAFE_RESTORE_BATCH);
+  for (const fn of batch) {
+    if (!scrollSafeSubs.has(fn)) continue;
+    try {
+      fn(false);
+    } catch {
+      /* one subscriber must not break the rest */
+    }
+  }
+  if (scrollSafeRestoreQueue.length) {
+    scrollSafeRestoreRaf = requestAnimationFrame(runScrollSafeRestoreBatch);
+  }
+}
+
+function scheduleScrollSafeRestore(): void {
+  cancelScrollSafeRestore();
+  scrollSafeRestoreQueue = Array.from(scrollSafeSubs);
+  if (!scrollSafeRestoreQueue.length) return;
+  if (typeof requestAnimationFrame !== 'function') {
+    const queue = scrollSafeRestoreQueue.splice(0);
+    for (const fn of queue) {
+      try {
+        fn(false);
+      } catch {
+        /* one subscriber must not break the rest */
+      }
+    }
+    return;
+  }
+  scrollSafeRestoreRaf = requestAnimationFrame(runScrollSafeRestoreBatch);
+}
 
 function notifyScrollSafe(active: boolean): void {
   if (scrollSafeActive === active) return;
   scrollSafeActive = active;
+  if (!active) {
+    scheduleScrollSafeRestore();
+    return;
+  }
+  cancelScrollSafeRestore();
   for (const fn of scrollSafeSubs) {
     try {
       fn(active);
@@ -317,22 +369,45 @@ function notifyScrollSafe(active: boolean): void {
   }
 }
 
+function armScrollSafeIdleTimer(): void {
+  if (typeof window === 'undefined') return;
+  if (scrollSafeEndTimer !== null) window.clearTimeout(scrollSafeEndTimer);
+  scrollSafeEndTimer = window.setTimeout(() => {
+    scrollSafeEndTimer = null;
+    notifyScrollSafe(false);
+  }, SCROLL_SAFE_IDLE_MS);
+}
+
+function beginScrollSafe(): void {
+  if (scrollSafeSubs.size === 0) return;
+  notifyScrollSafe(true);
+  armScrollSafeIdleTimer();
+}
+
 function subscribeScrollSafe(fn: ScrollSafeSubscriber): () => void {
   scrollSafeSubs.add(fn);
+  if (scrollSafeActive) {
+    try {
+      fn(true);
+    } catch {
+      /* one subscriber must not break the rest */
+    }
+  }
   if (!scrollSafeBound && typeof window !== 'undefined') {
     scrollSafeBound = true;
+    const onPointerDown = (event: PointerEvent): void => {
+      if (event.pointerType === 'mouse') return;
+      beginScrollSafe();
+    };
     window.addEventListener(
       'scroll',
-      () => {
-        notifyScrollSafe(true);
-        if (scrollSafeEndTimer !== null) window.clearTimeout(scrollSafeEndTimer);
-        scrollSafeEndTimer = window.setTimeout(() => {
-          scrollSafeEndTimer = null;
-          notifyScrollSafe(false);
-        }, 140);
-      },
+      beginScrollSafe,
       { passive: true, capture: true }
     );
+    window.addEventListener('touchstart', beginScrollSafe, { passive: true, capture: true });
+    window.addEventListener('touchmove', beginScrollSafe, { passive: true, capture: true });
+    window.addEventListener('pointerdown', onPointerDown, { passive: true, capture: true });
+    window.addEventListener('wheel', beginScrollSafe, { passive: true, capture: true });
   }
   return () => {
     scrollSafeSubs.delete(fn);
@@ -854,10 +929,11 @@ export class LiquidGlass {
     if (!IS_MOBILE || !IS_CHROMIUM || this.options.quality !== 'auto') return false;
     if (this.reducedTransparency || this.usesFallback || this.usesGpu || this.suspended) return false;
     const profile = this.resolveOpticalProfile();
-    if (profile !== 'card' && profile !== 'panel') return false;
     const short = Math.min(this.currentWidth, this.currentHeight);
     const area = this.currentWidth * this.currentHeight;
-    return short >= 120 || area >= 36_000;
+    if (profile === 'control' || profile === 'selection') return short >= 64 && area >= 24_000;
+    if (profile === 'bar') return short >= 56 && area >= 32_000;
+    return profile === 'card' || profile === 'panel';
   }
 
   private refreshScrollSafeSubscription(): void {
@@ -1253,7 +1329,7 @@ export class LiquidGlass {
             // into view at once don't block the scroll.
             this.scheduleBuild(() => this.installFilter());
           } else {
-            const css = this.filter.url;
+            const css = this.scrollSafeActive ? this.profiledFallbackFilter() : this.filter.url;
             this.element.style.backdropFilter = css;
             (this.element.style as WebkitStyle).webkitBackdropFilter = css;
           }
@@ -1376,7 +1452,7 @@ export class LiquidGlass {
       root: this.root,
     });
 
-    const css = this.filter.url;
+    const css = this.scrollSafeActive ? this.profiledFallbackFilter() : this.filter.url;
     this.element.style.backdropFilter = css;
     (this.element.style as WebkitStyle).webkitBackdropFilter = css;
   }
