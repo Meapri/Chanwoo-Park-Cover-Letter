@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="description" content="EdgeTranslate-v3 프로젝트 상세 설명: MV3 번역 확장, 다중 번역 라우팅, IndexedDB 캐시, Preact 패널 UX." />
-    <title>EdgeTranslate-v3 — 박찬우 프로젝트 상세</title>
+    <meta name="description" content="Manifest V3 환경에서 다중 번역 provider 라우팅, IndexedDB 캐시, Preact 패널 UX를 설계한 EdgeTranslate-v3 프로젝트입니다." />
+    <title>EdgeTranslate-v3 — 다중 번역 경로를 다루는 MV3 확장</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
@@ -25,7 +25,7 @@
       <nav class="nav-links" aria-label="주요 섹션">
         <a href="../../#projects">프로젝트</a>
         <a href="../../#capabilities">역량</a>
-        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#evidence">작업 방식</a>
         <a href="../../#contact">연락</a>
       </nav>
       <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
@@ -33,46 +33,45 @@
 
     <main id="top" class="detail-page">
       <section class="section-shell detail-hero">
-        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트 목록으로</a>
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트로 돌아가기</a>
         <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32}'>
           <div class="detail-meta">
             <span>Browser & Web</span>
-            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">GitHub 코드</a>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">소스 보기</a>
           </div>
-          <h1>EdgeTranslate-v3: 실제 웹 페이지 번역을 견디는 MV3 라우팅</h1>
+          <h1>EdgeTranslate-v3: 여러 번역 경로를 안정적으로 묶는 브라우저 확장</h1>
           <p>
-            EdgeTranslate-v3는 페이지 번역을 단순 API 호출로 보지 않고, 브라우저 확장 안에서 여러 번역 경로와 UI 상태를 안정적으로 묶는 프로젝트입니다.
-            Google/Page Translate, AI Page Translate, Gemini Nano, Chrome Built-in, Local/OpenAI 호환 경로를 분리해 라우팅하고,
-            Manifest V3 서비스 워커 환경에서도 IndexedDB 캐시와 Preact 패널 상태가 끊기지 않도록 설계했습니다.
+            EdgeTranslate-v3는 페이지 번역을 하나의 API 호출로 끝내지 않고, 브라우저 확장 안에서 여러 provider와 UI 상태를 함께 다루는 프로젝트입니다.
+            Manifest V3의 서비스 워커 수명, 페이지 DOM 변화, 스트리밍 응답, 캐시 상태가 동시에 움직이는 환경에서 번역 경험이 끊기지 않도록 구조를 나눴습니다.
           </p>
           <div class="detail-summary-grid">
             <div class="detail-fact">
-              <span>문제 영역</span>
-              <strong>브라우저 번역 UX의 상태 불안정성</strong>
-              <p>서비스 워커 수명, 페이지 DOM 변경, 스트리밍 응답, 패널 위치 상태가 동시에 움직이는 환경을 다룹니다.</p>
+              <span>마주한 문제</span>
+              <strong>번역 경로와 UI 상태가 따로 흔들리는 상황</strong>
+              <p>provider별 응답 형식, MV3 수명, 페이지 DOM 변화, 패널 상태가 어긋나면 사용자는 번역이 멈춘 것처럼 느낍니다.</p>
             </div>
             <div class="detail-fact">
-              <span>설계 초점</span>
-              <strong>번역 엔진 라우팅과 캐시 경계</strong>
-              <p>번역 provider를 배경 스크립트에서 분리하고 IndexedDB 캐시를 붙여 반복 요청과 fallback 비용을 줄이는 구조입니다.</p>
+              <span>설계 방향</span>
+              <strong>provider 라우팅과 캐시 계층 분리</strong>
+              <p>번역 경로를 한곳에서 선택하고, IndexedDB 캐시와 fallback 흐름을 별도 책임으로 나누어 반복 요청 비용을 줄였습니다.</p>
             </div>
             <div class="detail-fact">
-              <span>확인 포인트</span>
-              <strong>실제 사용 흐름까지 이어지는 코드</strong>
-              <p>라우팅, 캐시, content panel이 한 흐름으로 연결되어 번역 결과가 사용자 화면까지 자연스럽게 이어집니다.</p>
+              <span>확인한 결과</span>
+              <strong>결과 패널까지 이어지는 번역 흐름</strong>
+              <p>라우팅, 캐시, content panel이 같은 흐름에서 움직이도록 연결해 결과가 사용자 화면까지 자연스럽게 도달하게 했습니다.</p>
             </div>
           </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
-                <li><code>pageTranslate.js</code>에서 웹 페이지 번역, AI 번역, 로컬 호환 API, Chrome Built-in 경로를 같은 흐름에서 선택할 수 있게 구성했습니다.</li>
-                <li>IndexedDB 기반 영구 캐시, URL 해시 프리패치, TTL 정리를 붙여 MV3 제약 안에서도 반복 번역 비용을 줄였습니다.</li>
-                <li>Preact 패널은 streaming result, floating/fixed 모드, docking, drag velocity, TTS까지 실제 사용 장면에 맞춰 다듬었습니다.</li>
+                <li><code>pageTranslate.js</code>에서 Google, AI, DOM, Gemini Nano, Local, Chrome Built-in 번역 경로를 선택하는 흐름을 구성했습니다.</li>
+                <li><code>translationPersistentCache.js</code>에서 IndexedDB 캐시, URL 해시 프리패치, TTL 정리를 맡겨 반복 번역의 비용을 낮췄습니다.</li>
+                <li><code>Panel.jsx</code>에서는 streaming result, floating/fixed 모드, docking, drag velocity, TTS를 실제 사용 흐름에 맞춰 연결했습니다.</li>
               </ul>
             </div>
             <div class="detail-block">
-              <h4>코드 근거</h4>
+              <h4>살펴볼 파일</h4>
               <ul class="evidence-list detail-evidence">
                 <li><code>packages/EdgeTranslate/src/background/library/pageTranslate.js</code></li>
                 <li><code>packages/EdgeTranslate/src/background/library/translationPersistentCache.js</code></li>
@@ -82,21 +81,21 @@
           </div>
           <div class="detail-narrative">
             <section class="detail-narrative-section">
-              <h4>왜 이 레포가 중요한가</h4>
-              <p>페이지 번역은 텍스트를 API에 보내는 기능처럼 보이지만, 실제 브라우저에서는 DOM 분할, 언어 감지, 캐시, 모델 선택, UI 반응성이 함께 얽힙니다. 이 레포는 그 흐름을 기능별 경계로 나눠 확장 프로그램 구조 안에 묶은 작업입니다.</p>
+              <h4>왜 중요한가</h4>
+              <p>페이지 번역은 텍스트를 보내고 결과를 받는 기능처럼 보이지만, 실제 제품에서는 DOM 분할, provider 선택, 캐시, UI 반응성이 함께 맞아야 합니다. 이 프로젝트는 그 흐름을 확장 프로그램 안에서 견디도록 만든 작업입니다.</p>
             </section>
             <section class="detail-narrative-section">
-              <h4>구조를 읽는 방법</h4>
-              <p><code>pageTranslate.js</code>에서 번역 경로를 고르고, translator 계층이 외부 또는 로컬 모델과 통신하며, content panel이 결과를 사용자에게 보여줍니다. 배경 스크립트와 콘텐츠 스크립트의 책임이 분리되어 흐름을 따라가기 쉽습니다.</p>
+              <h4>어떻게 읽으면 좋은가</h4>
+              <p><code>pageTranslate.js</code>에서 번역 경로를 고르고, translator 계층이 외부 또는 로컬 모델과 통신하며, content panel이 결과를 보여주는 순서로 보면 전체 구조가 잡힙니다.</p>
             </section>
             <section class="detail-narrative-section">
-              <h4>채용 관점의 의미</h4>
-              <p>브라우저 API 제약, 프론트엔드 인터랙션, 비동기 네트워크, 캐시 설계를 한 제품 안에서 함께 다룬 경험을 보여줍니다. 화면에 보이는 기능과 내부 상태 관리가 함께 안정적이어야 한다는 관점이 드러납니다.</p>
+              <h4>엔지니어링 관점</h4>
+              <p>브라우저 API 제약, 비동기 네트워크, 프론트엔드 인터랙션, 캐시 설계를 한 제품 안에서 함께 다룬 경험입니다. 외부 provider가 흔들려도 사용자 흐름을 유지하는 구조를 고민했습니다.</p>
             </section>
           </div>
           <div class="detail-actions">
-            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">저장소 열기</a>
-            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#contact">연락 섹션 보기</a>
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">소스 코드 보기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#contact">연락하기</a>
           </div>
         </article>
       </section>
@@ -104,7 +103,7 @@
 
     <footer class="site-footer">
       <span>© 2026 Chanwoo Park</span>
-      <span>Powered by a custom Liquid Glass engine.</span>
+      <span>Built with a custom Liquid Glass engine.</span>
     </footer>
 
     <script type="module" src="/demo/demo.ts"></script>

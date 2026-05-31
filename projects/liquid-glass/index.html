@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="description" content="liquid-glass-web 프로젝트 상세 설명: SVG filter, backdrop-filter, auto profile, displacement/specular map 기반 웹 Liquid Glass 엔진." />
-    <title>liquid-glass-web — 박찬우 프로젝트 상세</title>
+    <meta name="description" content="SVG filter, WebGL refraction, auto profile, displacement/specular map을 결합한 웹 Liquid Glass 렌더링 엔진 프로젝트입니다." />
+    <title>liquid-glass-web — 브라우저에서 구현한 Liquid Glass 소재</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
@@ -25,7 +25,7 @@
       <nav class="nav-links" aria-label="주요 섹션">
         <a href="../../#projects">프로젝트</a>
         <a href="../../#capabilities">역량</a>
-        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#evidence">작업 방식</a>
         <a href="../../#contact">연락</a>
       </nav>
       <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
@@ -33,46 +33,45 @@
 
     <main id="top" class="detail-page">
       <section class="section-shell detail-hero">
-        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트 목록으로</a>
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트로 돌아가기</a>
         <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32}'>
           <div class="detail-meta">
             <span>Rendering Engine</span>
-            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/liquid-glass-web" target="_blank" rel="noreferrer">GitHub 코드</a>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/liquid-glass-web" target="_blank" rel="noreferrer">소스 보기</a>
           </div>
-          <h1>liquid-glass-web: 반투명 박스가 아니라 요소별 렌즈를 만드는 엔진</h1>
+          <h1>liquid-glass-web: DOM 요소를 유리 소재처럼 다루는 렌더링 엔진</h1>
           <p>
-            이 포트폴리오의 UI는 직접 만든 Liquid Glass 엔진 위에서 움직입니다.
-            DOM 요소마다 SVG filter와 backdrop-filter, WebGL refraction 경로를 결합하고,
-            표면 노멀과 displacement/specular map을 생성해 카드, 버튼, 칩, 패널이 각자 다른 두께와 굴절감을 갖도록 구성했습니다.
+            liquid-glass-web은 이 포트폴리오의 카드와 버튼에도 적용된 웹용 Liquid Glass 엔진입니다.
+            단순히 투명도를 올리는 대신, SVG filter와 WebGL refraction, displacement/specular map을 조합해 요소의 크기와 역할에 맞는 질감을 만듭니다.
           </p>
           <div class="detail-summary-grid">
             <div class="detail-fact">
-              <span>문제 영역</span>
-              <strong>단순 blur가 아닌 렌즈 질감</strong>
-              <p>배경을 흐리게 덮는 수준을 넘어, 요소의 곡률과 가장자리 굴절이 UI 소재처럼 읽히게 만드는 문제입니다.</p>
+              <span>마주한 문제</span>
+              <strong>blur만으로는 유리처럼 느껴지지 않는 UI</strong>
+              <p>배경을 흐리게 덮는 효과만으로는 곡률, 가장자리 굴절, 반사광이 부족해 실제 소재처럼 읽히기 어렵습니다.</p>
             </div>
             <div class="detail-fact">
-              <span>설계 초점</span>
-              <strong>요소별 optical profile 자동화</strong>
-              <p>bar, control, card, panel, selection을 크기와 의미로 분류해 각 요소에 맞는 두께와 굴절 품질을 계산합니다.</p>
+              <span>설계 방향</span>
+              <strong>요소 의미에 맞는 optical profile</strong>
+              <p>bar, control, card, panel, selection을 크기와 역할로 분류하고 각 요소에 어울리는 질감과 품질을 선택합니다.</p>
             </div>
             <div class="detail-fact">
-              <span>확인 포인트</span>
-              <strong>성능과 fallback까지 포함한 엔진</strong>
-              <p>DeviceProfile, lazy init, WebGL refractor, SVG fallback을 함께 두어 실제 페이지와 모바일 환경까지 고려했습니다.</p>
+              <span>확인한 결과</span>
+              <strong>성능과 fallback을 포함한 페이지 적용</strong>
+              <p>DeviceProfile, lazy init, WebGL refractor, SVG fallback을 함께 두어 데스크톱과 모바일 환경을 모두 고려했습니다.</p>
             </div>
           </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
-                <li>요소의 크기, radius, semantic role을 읽어 bar, control, card, panel, selection 프로파일을 자동으로 선택합니다.</li>
-                <li><code>FilterChain.ts</code>에서 <code>feImage</code>, <code>feDisplacementMap</code>, specular map을 조합해 가장자리 중심의 굴절감을 만듭니다.</li>
-                <li>lazy init, fallback, adaptive scheme, content-aware shadow를 엔진 라이프사이클 안에 넣어 실제 페이지에서 사용할 수 있게 했습니다.</li>
+                <li><code>AutoProfile.ts</code>에서 요소의 크기, radius, semantic role을 읽어 알맞은 glass profile을 선택합니다.</li>
+                <li><code>FilterChain.ts</code>에서 <code>feImage</code>, <code>feDisplacementMap</code>, specular map을 조합해 가장자리 굴절을 만듭니다.</li>
+                <li><code>DeviceProfile.ts</code>와 fallback 흐름으로 기기 품질에 맞춰 효과를 조절하고 페이지가 무겁게 느껴지지 않게 했습니다.</li>
               </ul>
             </div>
             <div class="detail-block">
-              <h4>코드 근거</h4>
+              <h4>살펴볼 파일</h4>
               <ul class="evidence-list detail-evidence">
                 <li><code>src/core/LiquidGlass.ts</code></li>
                 <li><code>src/core/FilterChain.ts</code></li>
@@ -82,21 +81,21 @@
           </div>
           <div class="detail-narrative">
             <section class="detail-narrative-section">
-              <h4>왜 이 레포가 중요한가</h4>
-              <p>Liquid Glass는 CSS 효과 하나로 끝나지 않습니다. 표면의 곡률, 반사광, 굴절, fallback, 상호작용 모션이 함께 맞아야 UI 소재로 읽힙니다. 이 레포는 그 요소들을 웹에서 재사용 가능한 엔진 API로 만든 작업입니다.</p>
+              <h4>왜 중요한가</h4>
+              <p>시각 효과는 보기 좋아야 하지만, 실제 제품에서는 성능과 접근성, fallback까지 함께 고려해야 합니다. 이 프로젝트는 디자인 의도를 브라우저 제약 안에서 재사용 가능한 엔진으로 바꾸는 작업입니다.</p>
             </section>
             <section class="detail-narrative-section">
-              <h4>구조를 읽는 방법</h4>
-              <p><code>LiquidGlass.ts</code>가 생명주기와 옵션 해석을 맡고, <code>FilterChain.ts</code>가 SVG filter를 구성하며, map 계층이 displacement/specular 이미지를 캐싱합니다. 최신 공식 엔진에는 모바일 품질 조절과 WebGL 기반 refraction 경로도 포함됩니다.</p>
+              <h4>어떻게 읽으면 좋은가</h4>
+              <p><code>LiquidGlass.ts</code>에서 옵션과 생명주기를 보고, <code>FilterChain.ts</code>와 map cache 계층에서 SVG filter와 displacement/specular 이미지가 어떻게 연결되는지 따라가면 좋습니다.</p>
             </section>
             <section class="detail-narrative-section">
-              <h4>채용 관점의 의미</h4>
-              <p>시각적 완성도만이 아니라 브라우저 렌더링 제약, GPU 비용, 접근성 설정, 모바일 품질 저하 조건까지 함께 다루는 능력을 보여줍니다. 디자인 의도를 실제 엔진 구현으로 연결한 대표 레포입니다.</p>
+              <h4>엔지니어링 관점</h4>
+              <p>렌더링 품질, GPU 비용, 접근성 설정, 모바일 품질 저하 조건을 함께 다룬 경험입니다. UI 감각을 실제 브라우저 엔진 구현으로 연결하는 문제 해결 방식을 보여줍니다.</p>
             </section>
           </div>
           <div class="detail-actions">
-            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/liquid-glass-web" target="_blank" rel="noreferrer">저장소 열기</a>
-            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">다른 프로젝트 보기</a>
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/liquid-glass-web" target="_blank" rel="noreferrer">엔진 코드 보기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">다른 프로젝트</a>
           </div>
         </article>
       </section>
@@ -104,7 +103,7 @@
 
     <footer class="site-footer">
       <span>© 2026 Chanwoo Park</span>
-      <span>Powered by a custom Liquid Glass engine.</span>
+      <span>Built with a custom Liquid Glass engine.</span>
     </footer>
 
     <script type="module" src="/demo/demo.ts"></script>

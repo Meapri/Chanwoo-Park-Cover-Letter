@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta
       name="description"
-      content="브라우저 UX, Liquid Glass 렌더링, macOS IME, AI 런타임 호환성, Android/Linux 런타임까지 코드 근거로 소개하는 박찬우 소프트웨어 엔지니어 포트폴리오입니다."
+      content="브라우저 확장, 렌더링 엔진, macOS 입력기, AI provider, Android/Linux 런타임 프로젝트를 통해 문제 해결 방식을 소개하는 박찬우 소프트웨어 엔지니어 포트폴리오입니다."
     />
     <meta property="og:title" content="박찬우 — Software Engineer Portfolio" />
     <meta
       property="og:description"
-      content="브라우저 UX부터 런타임 환경까지 실제 코드로 문제를 정리하는 엔지니어, 박찬우입니다."
+      content="플랫폼 경계에서 생기는 문제를 구조로 풀어내는 소프트웨어 엔지니어 박찬우의 포트폴리오입니다."
     />
     <meta property="og:type" content="website" />
     <title>박찬우 — Software Engineer Portfolio</title>
@@ -42,7 +42,7 @@
       <nav class="nav-links" aria-label="주요 섹션">
         <a href="#projects">프로젝트</a>
         <a href="#capabilities">역량</a>
-        <a href="#evidence">코드 근거</a>
+        <a href="#evidence">작업 방식</a>
         <a href="#contact">연락</a>
       </nav>
       <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">
@@ -53,23 +53,23 @@
     <main id="top">
       <section class="hero-section">
         <div class="hero-copy">
-          <p class="section-kicker">브라우저 UX부터 런타임 환경까지 코드로 확인하는 엔지니어</p>
+          <p class="section-kicker">Software Engineer Portfolio</p>
           <h1>
-            복잡한 경계를<br />
-            실제 동작하는 코드로<br />
-            <span>정리합니다.</span>
+            복잡한 환경의 문제를<br />
+            견고한 구조로<br />
+            <span>풀어냅니다.</span>
           </h1>
           <p class="hero-lede">
-            브라우저 확장의 번역 UX, 웹용 Liquid Glass 렌더링, macOS 한글 입력기,
-            AI 프로바이더와 런타임 호환성, Android 안의 Linux/glibc 런타임 실험까지.
-            관심 있는 기술을 나열하기보다, 문제를 작게 나누고 실제 코드와 테스트로 동작을 확인하며 해결합니다.
+            안녕하세요, 소프트웨어 엔지니어 박찬우입니다. 브라우저 확장부터 macOS 네이티브 입력기,
+            AI provider 어댑터, Android 안의 Linux 런타임까지 서로 다른 환경의 제약을 읽고
+            오래 유지할 수 있는 구조로 정리하는 일을 좋아합니다.
           </p>
           <div class="hero-actions" aria-label="주요 행동">
             <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="#projects">
-              대표 프로젝트 보기
+              프로젝트 살펴보기
             </a>
             <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">
-              GitHub 코드 열기
+              GitHub 보기
             </a>
           </div>
         </div>
@@ -85,25 +85,25 @@
             </div>
           </div>
           <div class="identity-card">
-            <strong>Software Engineer</strong>
-            <span>Browser UX, Liquid Glass, macOS IME, AI Runtime, Android/Linux</span>
+            <strong>Platform-minded Software Engineer</strong>
+            <span>Browser UX · Rendering · macOS IME · AI Runtime · Android/Linux</span>
           </div>
           <dl class="proof-grid">
             <div>
               <dt>26</dt>
-              <dd>분석한 접근 가능 저장소</dd>
+              <dd>살펴본 저장소</dd>
             </div>
             <div>
               <dt>10</dt>
-              <dd>공개 원본 저장소</dd>
+              <dd>대표 공개 레포</dd>
             </div>
             <div>
               <dt>46</dt>
-              <dd>공개 저장소 누적 Stars</dd>
+              <dd>공개 Stars</dd>
             </div>
             <div>
               <dt>8</dt>
-              <dd>확인된 주요 언어</dd>
+              <dd>주요 언어</dd>
             </div>
           </dl>
         </aside>
@@ -111,22 +111,22 @@
 
       <section class="section-shell intro-strip liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":26}'>
         <div>
-          <span>제가 일하는 방식</span>
-          <strong>사용자 경험과 시스템 내부를 함께 봅니다</strong>
+          <span>문제를 보는 방식</span>
+          <strong>사용자에게 닿는 경험과 내부 구조를 함께 설계합니다</strong>
         </div>
         <p>
-          겉으로 보이는 인터페이스만 다듬기보다, 그 아래에서 움직이는 API와 런타임, 캐시, 입력 상태까지 함께 확인합니다.
-          TypeScript, Swift, Python, C++, Kotlin을 오가며 렌더링, 입력기, AI 호환성, 런타임, 데이터 파이프라인을 다뤄 왔습니다.
+          화면의 움직임이 자연스러운지 보는 동시에, 그 뒤에서 상태와 캐시, provider, 런타임이 어떻게 맞물리는지도 함께 봅니다.
+          TypeScript, Swift, Python, C++, Kotlin을 오가며 여러 플랫폼의 경계에서 생기는 문제를 다뤄 왔습니다.
         </p>
       </section>
 
       <section id="projects" class="section-shell">
         <div class="section-heading">
           <p class="section-kicker">대표 프로젝트</p>
-          <h2>문제를 끝까지 파고든 대표 프로젝트</h2>
+          <h2>프로젝트로 보여주는 문제 해결 방식</h2>
           <p>
-            각 프로젝트가 어떤 문제에서 출발했고, 어떤 구조로 해결했는지 중심으로 정리했습니다.
-            화면에 보이는 결과뿐 아니라 그 안쪽의 설계 판단까지 함께 보여드립니다.
+            각 프로젝트는 다른 플랫폼, 다른 제약, 다른 실패 지점에서 출발했습니다.
+            문제를 어떻게 나누고 어떤 구조로 연결했는지 중심으로 소개합니다.
           </p>
         </div>
 
@@ -136,10 +136,10 @@
               <span>Browser & Web</span>
               <a href="https://github.com/Meapri/EdgeTranslate-v3" target="_blank" rel="noreferrer">Meapri/EdgeTranslate-v3</a>
             </div>
-            <h3>MV3 번역 확장과 다중 번역 라우팅</h3>
+            <h3>다중 번역 경로를 다루는 MV3 확장</h3>
             <p>
-              Manifest V3 환경에서 Google/Page Translate, AI Page Translate, Gemini Nano, Chrome Built-in, Local/OpenAI 호환 번역 경로를
-              하나의 흐름으로 라우팅합니다. IndexedDB 캐시와 Preact 패널 상태까지 함께 다뤄 실제 페이지 번역 UX를 안정적으로 만듭니다.
+              Manifest V3의 서비스 워커 제약 안에서 Google, Gemini Nano, Chrome Built-in,
+              Local/OpenAI 호환 번역 경로를 나누어 라우팅했습니다. 캐시와 패널 상태까지 함께 설계해 페이지 번역 흐름이 끊기지 않게 했습니다.
             </p>
             <ul class="evidence-list">
               <li><code>packages/translators/src/translators/local.ts</code></li>
@@ -147,7 +147,7 @@
               <li><code>packages/EdgeTranslate/src/content/display/Panel.jsx</code></li>
             </ul>
             <a class="project-detail-link liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="projects/edge-translate/">
-              상세 설명 보기
+              자세히 보기
             </a>
           </article>
 
@@ -156,10 +156,10 @@
               <span>Rendering Engine</span>
               <a href="https://github.com/Meapri/liquid-glass-web" target="_blank" rel="noreferrer">liquid-glass-web</a>
             </div>
-            <h3>웹용 리퀴드 글라스 엔진</h3>
+            <h3>브라우저에서 구현한 Liquid Glass 소재</h3>
             <p>
-              DOM 요소마다 SVG <code>feDisplacementMap</code>, WebGL refraction, displacement/specular map,
-              auto profile/preset, MapCache를 결합해 단순 blur가 아닌 재사용 가능한 유리 소재를 만듭니다.
+              SVG filter, WebGL refraction, displacement/specular map을 조합해 DOM 요소마다 다른 유리 질감을 적용합니다.
+              기기 성능과 요소 의미를 읽어 품질과 fallback을 자동으로 조절합니다.
             </p>
             <ul class="tag-row">
               <li>TypeScript</li>
@@ -167,7 +167,7 @@
               <li>AutoProfile</li>
             </ul>
             <a class="project-detail-link liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="projects/liquid-glass/">
-              상세 설명 보기
+              자세히 보기
             </a>
           </article>
 
@@ -176,10 +176,10 @@
               <span>Apple Platform</span>
               <a href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">PriType-Swift</a>
             </div>
-            <h3>macOS 한글 입력기와 IMK 경계 처리</h3>
+            <h3>macOS 네이티브 한글 입력기</h3>
             <p>
-              InputMethodKit과 libhangul을 묶어 한글 조합 라이프사이클, 한자 후보창, 상태바, 업데이트 흐름을 구성했습니다.
-              Chromium/Electron 좌표 예외와 IMK delegate 수명 문제까지 코드에서 다룹니다.
+              InputMethodKit과 libhangul을 연결해 한글 조합, 한자 후보, 입력 모드 상태를 관리합니다.
+              Chromium/Electron 앱에서 흔히 어긋나는 커서 좌표와 delegate 예외까지 별도 경로로 다뤘습니다.
             </p>
             <ul class="tag-row">
               <li>Swift</li>
@@ -187,7 +187,7 @@
               <li>Hanja</li>
             </ul>
             <a class="project-detail-link liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="projects/pritype/">
-              상세 설명 보기
+              자세히 보기
             </a>
           </article>
 
@@ -196,10 +196,10 @@
               <span>AI Agent Infra</span>
               <a href="https://github.com/Meapri/hermes-google-antigravity-plugin" target="_blank" rel="noreferrer">Hermes Antigravity</a>
             </div>
-            <h3>Google Antigravity provider 플러그인</h3>
+            <h3>AI provider 어댑터와 tool-call 정규화</h3>
             <p>
-              OAuth/gRPC provider 경계, Claude 도구 스키마 정규화, tool-call id 보정,
-              context compression, 모델 피커와 WebUI catalog 패치를 signature 검증 흐름 위에서 연결했습니다.
+              Google Antigravity provider를 Hermes 흐름에 연결하면서 OAuth/gRPC, streaming event,
+              Claude-style tool schema, tool-call id를 한 계층에서 정리했습니다.
             </p>
             <ul class="tag-row">
               <li>Python</li>
@@ -207,7 +207,7 @@
               <li>Provider Patch</li>
             </ul>
             <a class="project-detail-link liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="projects/hermes-antigravity/">
-              상세 설명 보기
+              자세히 보기
             </a>
           </article>
 
@@ -216,10 +216,10 @@
               <span>ML Runtime</span>
               <a href="https://github.com/Meapri/MLX-Swift" target="_blank" rel="noreferrer">MLX-Swift</a>
             </div>
-            <h3>MLX/VLM fork 기반 호환성 실험</h3>
+            <h3>공개 fork 기반 MLX/VLM 호환성 실험</h3>
             <p>
-              MLX-Swift, mlx-swift-lm, mlx-vlm 공개 fork에서 모델 로드 계획, QwenVL/Gemma4 MTP,
-              KV cache, OpenAI/Ollama 호환 서버, tokenization 경로를 분석하고 확장한 호환성 실험입니다.
+              MLX-Swift, mlx-swift-lm, mlx-vlm 공개 fork를 기반으로 모델 로드, 멀티모달 입력,
+              KV cache, OpenAI/Ollama 호환 API가 이어지는 경로를 분석하고 확장해 본 실험입니다.
             </p>
             <ul class="tag-row">
               <li>Swift</li>
@@ -227,7 +227,7 @@
               <li>OpenAI/Ollama</li>
             </ul>
             <a class="project-detail-link liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="projects/mlx-vlm/">
-              상세 설명 보기
+              자세히 보기
             </a>
           </article>
 
@@ -236,10 +236,10 @@
               <span>Android & Linux</span>
               <a href="https://github.com/Meapri/Plib" target="_blank" rel="noreferrer">Plib</a>
             </div>
-            <h3>Rootless Android Linux/glibc 런타임 실험</h3>
+            <h3>Android 샌드박스 안의 Linux 런타임 실험</h3>
             <p>
-              Android 앱 내부의 app-private rootfs에서 Linux/glibc arm64 실행을 실험합니다.
-              clean-room 프로토콜, JNI runtime report, ALR 실행 계획, rootfs 안전 추출, GPU bridge 테스트를 한 흐름으로 정리했습니다.
+              Android app-private rootfs 안에서 rootless Linux/glibc arm64 실행을 실험했습니다.
+              문서화된 clean-room 절차, JNI 진단, ALR 실행 계획, GPU bridge 테스트를 함께 구성했습니다.
             </p>
             <ul class="tag-row">
               <li>C++</li>
@@ -247,7 +247,7 @@
               <li>Rootfs</li>
             </ul>
             <a class="project-detail-link liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="projects/plib/">
-              상세 설명 보기
+              자세히 보기
             </a>
           </article>
         </div>
@@ -256,32 +256,32 @@
       <section id="capabilities" class="section-shell capabilities-section">
         <div class="section-heading">
           <p class="section-kicker">핵심 역량</p>
-          <h2>여러 계층을 연결해 문제를 끝까지 추적합니다</h2>
+          <h2>플랫폼의 경계를 읽고, 안정적인 구조로 연결합니다</h2>
         </div>
         <div class="capability-grid liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":30}'>
           <div>
-            <h3>Browser & UX Systems</h3>
-            <p>Chrome Extension MV3, Preact, IndexedDB cache, page translation routing, streaming UI, floating/fixed panel motion</p>
+            <h3>브라우저 제품 경험</h3>
+            <p>Manifest V3, Preact, IndexedDB cache, page translation routing, streaming UI, panel state</p>
           </div>
           <div>
-            <h3>Rendering & Motion</h3>
-            <p>SVG filters, displacement maps, specular rim, auto material profile, pointer glare, accessibility-aware fallback</p>
+            <h3>렌더링 엔진과 시각 품질</h3>
+            <p>SVG filters, WebGL refraction, displacement maps, specular rim, auto profile, accessibility-aware fallback</p>
           </div>
           <div>
-            <h3>Apple Platform</h3>
-            <p>Swift, InputMethodKit, libhangul, Hanja candidate UI, Chromium/Electron cursor fallback, macOS packaging</p>
+            <h3>Apple 플랫폼 시스템</h3>
+            <p>Swift, InputMethodKit, libhangul, Hanja candidate UI, Chromium/Electron cursor fallback, XCTest</p>
           </div>
           <div>
-            <h3>AI Runtime & Infra</h3>
-            <p>OAuth providers, gRPC adapters, tool schema normalization, OpenAI/Ollama compatibility, MLX/VLM fork experiments</p>
+            <h3>AI provider 호환성</h3>
+            <p>OAuth providers, gRPC adapters, tool schema normalization, streaming events, OpenAI/Ollama compatibility</p>
           </div>
           <div>
-            <h3>Android/Linux Boundary</h3>
-            <p>NDK, C/C++, Kotlin, app-private rootfs, runtime launch policy, JNI diagnostics, clean-room implementation notes</p>
+            <h3>Android/Linux 런타임</h3>
+            <p>NDK, C/C++, Kotlin, app-private rootfs, runtime launch plan, JNI diagnostics, clean-room notes</p>
           </div>
           <div>
-            <h3>Data & Engineering Hygiene</h3>
-            <p>PostgreSQL schema/indexes, Python batch pipeline, XCTest/Pytest style tests, docs-first architecture, GitHub Actions deployment</p>
+            <h3>검증 가능한 개발 흐름</h3>
+            <p>PostgreSQL schema, Python pipeline, focused tests, architecture notes, GitHub Actions deployment</p>
           </div>
         </div>
         <ul class="stack-cloud" aria-label="주요 기술 스택">
@@ -304,57 +304,57 @@
 
       <section id="evidence" class="section-shell evidence-section">
         <div class="section-heading">
-          <p class="section-kicker">코드 근거</p>
-          <h2>최근 저장소에서 반복해서 드러나는 작업 방식</h2>
+          <p class="section-kicker">작업 방식</p>
+          <h2>문제를 구조로 바꾸는 과정</h2>
         </div>
         <div class="evidence-panel liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32}'>
           <ol class="timeline">
             <li>
-              <time>2026.05.31</time>
-              <strong>AI 프로바이더/런타임 경계 정리</strong>
-              <span>Google Antigravity OAuth/gRPC, Claude 도구 스키마 정규화, 모델 피커/WebUI catalog 패치를 Python 계층에서 연결.</span>
+              <time>01</time>
+              <strong>흐름이 끊기는 지점을 먼저 찾습니다</strong>
+              <span>번역 provider, AI tool-call, 입력기 조합 상태처럼 실패가 자주 생기는 경계를 분리해 읽습니다.</span>
             </li>
             <li>
-              <time>2026.05.30</time>
-              <strong>브라우저 UX와 렌더링 엔진 고도화</strong>
-              <span>EdgeTranslate-v3의 다중 번역 라우팅/캐시/패널 모션과 Liquid Glass의 FilterChain/AutoProfile을 함께 검증.</span>
+              <time>02</time>
+              <strong>상태와 캐시를 제품 흐름 안에 둡니다</strong>
+              <span>사용자에게 보이는 UI와 내부 cache, streaming, fallback 흐름이 같은 방향으로 움직이게 설계합니다.</span>
             </li>
             <li>
-              <time>2026.05.19</time>
-              <strong>PriType-Swift 입력 시스템</strong>
-              <span>HangulComposer, PriTypeInputController, HanjaManager, Chromium 좌표 fallback, 테스트 번들까지 갖춘 macOS IME 구조.</span>
+              <time>03</time>
+              <strong>플랫폼별 예외를 코드 경로로 만듭니다</strong>
+              <span>Chromium/Electron 입력 예외, Android 샌드박스 제약, 브라우저 렌더링 fallback을 명확한 분기와 테스트로 관리합니다.</span>
             </li>
             <li>
-              <time>2026.04-05</time>
-              <strong>Android/Linux와 데이터 파이프라인</strong>
-              <span>Plib의 rootfs/runtime/GPU bridge 테스트와 Test_PCW_2026의 PostgreSQL 이벤트 분석 파이프라인을 코드로 분리.</span>
+              <time>04</time>
+              <strong>실험을 문서와 검증으로 남깁니다</strong>
+              <span>동작 확인에서 끝내지 않고 구조 문서, 테스트, 배포 흐름까지 정리해 다음 변경을 받아낼 수 있게 합니다.</span>
             </li>
           </ol>
-          <div class="commit-table" aria-label="대표 코드 근거">
-            <div><span>pageTranslate.js</span><strong>번역 엔진 라우팅과 Local/OpenAI 호환 경계</strong></div>
-            <div><span>LiquidGlass.ts</span><strong>auto profile, fallback, filter lifecycle 제어</strong></div>
-            <div><span>HangulComposer.swift</span><strong>macOS 한글 조합과 Chromium/Electron 예외 처리</strong></div>
-            <div><span>google_antigravity_adapter.py</span><strong>OAuth provider, tool schema, streaming adapter</strong></div>
-            <div><span>runtime_report.cpp</span><strong>Android JNI runtime/GPU probe와 ALR 실행 계획</strong></div>
+          <div class="commit-table" aria-label="대표 작업 근거">
+            <div><span>pageTranslate.js</span><strong>여러 번역 엔진을 한 흐름으로 묶는 라우팅</strong></div>
+            <div><span>LiquidGlass.ts</span><strong>유리 소재의 생명주기와 fallback 제어</strong></div>
+            <div><span>HangulComposer.swift</span><strong>한글 조합 상태와 앱별 입력 예외 처리</strong></div>
+            <div><span>google_antigravity_adapter.py</span><strong>provider 응답과 tool-call 이벤트 정규화</strong></div>
+            <div><span>runtime_report.cpp</span><strong>Android JNI 진단과 런타임 진입 확인</strong></div>
           </div>
         </div>
       </section>
 
       <section id="contact" class="section-shell contact-section liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":34}'>
         <div>
-          <p class="section-kicker">함께 만들고 싶습니다</p>
-          <h2>실험을 실제 제품 품질로 다듬는 팀과 함께하고 싶습니다.</h2>
+          <p class="section-kicker">함께 일하고 싶습니다</p>
+          <h2>낯선 제약을 제품의 안정성으로 바꾸는 팀에 기여하고 싶습니다.</h2>
           <p>
-            기능을 구현하는 데서 멈추지 않고, 코드가 맞닿는 API와 OS, 런타임의 경계를 깊이 확인합니다.
-            이를 바탕으로 사용자에게 닿는 경험의 디테일과 유지보수하기 좋은 구조를 함께 다듬어 나갑니다.
+            새로운 플랫폼이나 복잡한 런타임을 만났을 때 겁내기보다 구조를 나누고, 실패 지점을 좁히고,
+            팀이 이어서 다룰 수 있는 코드로 정리하는 일을 좋아합니다.
           </p>
         </div>
         <div class="contact-actions">
           <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">
-            GitHub 프로필 보기
+            GitHub에서 보기
           </a>
           <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/Chanwoo-Park-Cover-Letter" target="_blank" rel="noreferrer">
-            이 페이지 저장소
+            페이지 저장소
           </a>
         </div>
       </section>
@@ -362,7 +362,7 @@
 
     <footer class="site-footer">
       <span>© 2026 Chanwoo Park</span>
-      <span>Powered by a custom Liquid Glass engine.</span>
+      <span>Built with a custom Liquid Glass engine.</span>
     </footer>
 
     <script type="module" src="/demo/demo.ts"></script>

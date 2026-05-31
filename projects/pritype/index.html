@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="description" content="PriType-Swift 프로젝트 상세 설명: macOS InputMethodKit, libhangul, 한자 후보, Chromium/Electron 입력 예외 처리." />
-    <title>PriType-Swift — 박찬우 프로젝트 상세</title>
+    <meta name="description" content="InputMethodKit과 libhangul을 연결해 한글 조합 상태, 한자 후보, Chromium/Electron 입력 예외를 다룬 macOS 한글 입력기 프로젝트입니다." />
+    <title>PriType-Swift — macOS 네이티브 한글 입력기</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="/src/styles/liquid-glass.css" />
@@ -25,7 +25,7 @@
       <nav class="nav-links" aria-label="주요 섹션">
         <a href="../../#projects">프로젝트</a>
         <a href="../../#capabilities">역량</a>
-        <a href="../../#evidence">코드 근거</a>
+        <a href="../../#evidence">작업 방식</a>
         <a href="../../#contact">연락</a>
       </nav>
       <a class="nav-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.28)"}' href="https://github.com/Meapri" target="_blank" rel="noreferrer">GitHub</a>
@@ -33,45 +33,45 @@
 
     <main id="top" class="detail-page">
       <section class="section-shell detail-hero">
-        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트 목록으로</a>
+        <a class="detail-back-link secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">프로젝트로 돌아가기</a>
         <article class="project-detail-card liquid-glass" data-glass='{"profile":"auto","preset":"auto","scheme":"light","radius":32}'>
           <div class="detail-meta">
             <span>Apple Platform</span>
-            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">GitHub 코드</a>
+            <a class="detail-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">소스 보기</a>
           </div>
-          <h1>PriType-Swift: macOS 입력기 경계 조건까지 다루는 한글 IME</h1>
+          <h1>PriType-Swift: 입력 조합 상태를 직접 다루는 macOS 한글 IME</h1>
           <p>
-            PriType-Swift는 InputMethodKit과 libhangul을 연결해 한글 조합, 한자 후보, 상태 관리, 업데이트 흐름을 구성한 macOS 입력기입니다.
-            특히 Chromium/Electron 기반 앱에서 나타나는 delegate 수명과 커서 좌표 문제를 별도 경로로 분리해 입력 안정성을 높이는 방향으로 설계했습니다.
+            PriType-Swift는 macOS InputMethodKit과 libhangul을 연결해 한글 조합, 한자 후보, 입력 모드 상태를 관리하는 네이티브 입력기입니다.
+            입력기는 작은 상태 불일치도 바로 사용자의 불편으로 이어지기 때문에, 앱별 예외와 조합 생명주기를 명확하게 나누는 데 집중했습니다.
           </p>
           <div class="detail-summary-grid">
             <div class="detail-fact">
-              <span>문제 영역</span>
-              <strong>macOS IME의 조합 상태와 앱 호환성</strong>
-              <p>한글 조합은 키 입력, 후보창, 커서 좌표, 앱별 text client 차이가 모두 맞물려 작은 예외도 입력 깨짐으로 이어집니다.</p>
+              <span>마주한 문제</span>
+              <strong>앱마다 달라지는 입력기 이벤트와 커서 좌표</strong>
+              <p>한글 조합은 키 입력, 후보창, 커서 좌표, text client 차이가 맞물려 작은 예외도 입력 깨짐으로 이어집니다.</p>
             </div>
             <div class="detail-fact">
-              <span>설계 초점</span>
-              <strong>InputMethodKit과 libhangul의 책임 분리</strong>
-              <p>IMK 이벤트 흐름과 libhangul 조합 상태를 분리해 입력 모드, force commit, 후보창 표시를 추적하기 쉽게 만들었습니다.</p>
+              <span>설계 방향</span>
+              <strong>IMK 이벤트와 libhangul 조합 상태 분리</strong>
+              <p>입력 모드의 기준점을 한곳에 두고, force commit과 후보창 표시를 별도 흐름으로 분리해 추적하기 쉽게 만들었습니다.</p>
             </div>
             <div class="detail-fact">
-              <span>확인 포인트</span>
-              <strong>Chromium/Electron 예외까지 코드화</strong>
-              <p>일반 Cocoa 앱뿐 아니라 좌표와 delegate 동작이 다른 앱군을 별도 fallback 경로로 다룹니다.</p>
+              <span>확인한 결과</span>
+              <strong>Chromium/Electron 예외를 별도 경로로 관리</strong>
+              <p>일반 Cocoa 앱뿐 아니라 좌표와 delegate 동작이 다른 앱군을 감지하고 fallback 경로로 다룹니다.</p>
             </div>
           </div>
           <div class="detail-grid">
             <div class="detail-block">
               <h4>구현 포인트</h4>
               <ul class="detail-points">
-                <li><code>main.swift</code>의 IMKServer 흐름과 libhangul 조합 상태를 분리해 입력 모드와 조합 라이프사이클을 추적하기 쉽게 만들었습니다.</li>
-                <li>한자 사전 preload, 후보창, Right Option/Right Command 트리거를 입력기 경험 안에 연결했습니다.</li>
-                <li>Chromium/Electron 예외, cursor rect cache, force commit 처리를 별도 경로로 관리해 호환성 문제를 좁혔습니다.</li>
+                <li><code>HangulComposer.swift</code>에서 libhangul 조합 생명주기와 입력 모드의 기준 상태를 추적합니다.</li>
+                <li><code>main.swift</code>에서 IMKServer 초기화, 한자 사전 preload, update check 흐름을 구성했습니다.</li>
+                <li>Chromium/Electron delegate와 cursor rect 예외, force commit 처리를 분리해 입력 상태가 꼬이는 범위를 줄였습니다.</li>
               </ul>
             </div>
             <div class="detail-block">
-              <h4>코드 근거</h4>
+              <h4>살펴볼 파일</h4>
               <ul class="evidence-list detail-evidence">
                 <li><code>Sources/PriType/main.swift</code></li>
                 <li><code>Sources/PriTypeCore/HangulComposer.swift</code></li>
@@ -81,21 +81,21 @@
           </div>
           <div class="detail-narrative">
             <section class="detail-narrative-section">
-              <h4>왜 이 레포가 중요한가</h4>
-              <p>입력기는 사용자가 가장 민감하게 체감하는 시스템 소프트웨어입니다. 한 글자가 늦게 커밋되거나 후보창 위치가 흔들려도 바로 불편해집니다. 이 레포는 OS 프레임워크와 언어 조합 엔진 사이의 경계 조건을 직접 다룹니다.</p>
+              <h4>왜 중요한가</h4>
+              <p>입력기는 사용자가 매 순간 체감하는 시스템 소프트웨어입니다. 한 글자가 늦게 커밋되거나 후보창 위치가 흔들려도 바로 불편해집니다. 이 프로젝트는 OS 프레임워크와 언어 조합 엔진 사이의 경계를 직접 다룹니다.</p>
             </section>
             <section class="detail-narrative-section">
-              <h4>구조를 읽는 방법</h4>
-              <p><code>main.swift</code>에서 IMKServer와 초기화 흐름을 잡고, <code>HangulComposer.swift</code>가 조합 상태의 중심이 됩니다. 한자 후보와 상태 UI는 별도 매니저와 윈도우 계층으로 분리되어 입력 흐름을 침범하지 않게 구성되어 있습니다.</p>
+              <h4>어떻게 읽으면 좋은가</h4>
+              <p><code>main.swift</code>에서 IMKServer와 초기화 흐름을 보고, <code>HangulComposer.swift</code>에서 조합 상태 전이를 따라가면 좋습니다. 한자 후보와 상태 UI는 별도 매니저와 윈도우 계층으로 분리되어 있습니다.</p>
             </section>
             <section class="detail-narrative-section">
-              <h4>채용 관점의 의미</h4>
-              <p>Apple platform API, C 라이브러리 연동, 사용자 입력 UX, 앱별 호환성 문제를 동시에 다룬 경험입니다. 운영체제와 맞닿은 문제를 구조적으로 좁혀 가는 방식이 드러납니다.</p>
+              <h4>엔지니어링 관점</h4>
+              <p>Apple platform API, C 라이브러리 연동, 사용자 입력 UX, 앱별 호환성 문제를 동시에 다룬 경험입니다. 재현하기 어려운 OS-앱 경계 문제를 좁혀 가는 방식이 드러납니다.</p>
             </section>
           </div>
           <div class="detail-actions">
-            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">저장소 열기</a>
-            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">다른 프로젝트 보기</a>
+            <a class="primary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"dark","tint":"rgba(37, 99, 235, 0.24)"}' href="https://github.com/Meapri/PriType-Swift" target="_blank" rel="noreferrer">프로젝트 보기</a>
+            <a class="secondary-action liquid-glass lg-interactive" data-glass='{"profile":"auto","preset":"auto","radius":"pill","scheme":"light"}' href="../../#projects">다른 프로젝트</a>
           </div>
         </article>
       </section>
@@ -103,7 +103,7 @@
 
     <footer class="site-footer">
       <span>© 2026 Chanwoo Park</span>
-      <span>Powered by a custom Liquid Glass engine.</span>
+      <span>Built with a custom Liquid Glass engine.</span>
     </footer>
 
     <script type="module" src="/demo/demo.ts"></script>
