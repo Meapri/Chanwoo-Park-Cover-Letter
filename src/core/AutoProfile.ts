@@ -4,7 +4,6 @@ export interface LiquidGlassAutoProfileInput {
   tagName?: string;
   role?: string | null;
   ariaLabel?: string | null;
-  href?: string | null;
   className?: string | null;
   textLength?: number;
   buttonCount?: number;
@@ -19,7 +18,7 @@ export function resolveLiquidGlassAutoProfile(
   input: LiquidGlassAutoProfileInput
 ): Exclude<LiquidGlassOpticalProfile, 'auto'> {
   const semantic = resolveSemanticProfile(input);
-  if (semantic && semantic !== 'card') return semantic;
+  if (semantic) return semantic;
 
   const short = Math.min(input.width, input.height);
   const long = Math.max(input.width, input.height);
@@ -30,7 +29,6 @@ export function resolveLiquidGlassAutoProfile(
   if (short <= 88 && aspect >= 4.5) return 'bar';
   if (short <= 92 && (radiusRatio > 0.42 || textLength <= 18)) return 'control';
   if (short >= 260 || (input.width * input.height > 140_000 && aspect < 4)) return 'panel';
-  if (semantic === 'card') return 'card';
   return 'card';
 }
 
@@ -43,14 +41,6 @@ function resolveSemanticProfile(
   const className = input.className?.toLowerCase() ?? '';
   const controlCount = (input.buttonCount ?? 0) + (input.inputCount ?? 0);
   const linkCount = input.linkCount ?? 0;
-  const isLink = tag === 'a' || role === 'link' || Boolean(input.href);
-  const short = Math.min(input.width, input.height);
-  const radiusRatio = input.radius / Math.max(1, short);
-  const buttonLikeClass =
-    /(^|[\s_-])(action|button|btn|cta|control|chip|tag|pill|badge)([\s_-]|$)/.test(
-      className
-    );
-  const buttonLikeShape = short <= 96 && radiusRatio >= 0.36;
 
   if (
     role === 'tablist' ||
@@ -62,7 +52,6 @@ function resolveSemanticProfile(
   }
   if (
     tag === 'button' ||
-    (isLink && (buttonLikeClass || buttonLikeShape)) ||
     role === 'button' ||
     role === 'switch' ||
     role === 'slider' ||

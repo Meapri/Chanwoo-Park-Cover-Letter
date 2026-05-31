@@ -15,6 +15,7 @@
 
 import { makeSurface } from './SurfaceField';
 import { scratchCanvas, scratchHTMLCanvas } from './scratch';
+import { encodeCanvas } from './CanvasEncode';
 
 export interface DisplacementMapParams {
   width: number;
@@ -48,7 +49,12 @@ const RIM_GAIN = 1.7;
 
 export function generateDisplacementMap(
   params: DisplacementMapParams
-): DisplacementMapResult {
+): Promise<DisplacementMapResult> {
+  // Anti-aliasing: at a low output pixel-ratio (e.g. 0.4 on mobile, or a
+  // perf-reduced desktop), a hard-sampled map upscales into visible stair-steps
+  // along the lensing edge. So we render at a higher internal resolution and
+  // downscale with the browser's high-quality filter — the stored texture stays
+  // small (cheap to sample at runtime) but is cleanly anti-aliased.
   const outDpr = params.pixelRatio;
   const ss = outDpr < 0.9 ? 2 : 1;
   const dpr = outDpr * ss;
@@ -130,26 +136,26 @@ export function generateDisplacementMap(
 
   ctx.putImageData(img, 0, 0);
 
-  const url = ss > 1
-    ? downscaleToDataURL(canvas, totalW, totalH, ss)
-    : canvas instanceof HTMLCanvasElement
-      ? canvas.toDataURL('image/webp', 1.0)
-      : offscreenToDataURL(canvas as OffscreenCanvas);
+  const urlPromise = ss > 1
+    ? downscaleAndEncode(canvas, totalW, totalH, ss)
+    : encodeCanvas(canvas);
 
-  return {
+  return urlPromise.then((url) => ({
     url,
     padding: paddingCss,
     totalWidth: totalW / dpr,
     totalHeight: totalH / dpr,
-  };
+  }));
 }
 
-function downscaleToDataURL(
+/** Downsample a supersampled map to 1/ss with the browser's filter (anti-alias)
+ * and encode it. The result texture is small but smooth. */
+function downscaleAndEncode(
   src: HTMLCanvasElement | OffscreenCanvas,
   srcW: number,
   srcH: number,
   ss: number
-): string {
+): Promise<string> {
   const dstW = Math.max(1, Math.round(srcW / ss));
   const dstH = Math.max(1, Math.round(srcH / ss));
   const tmp = scratchHTMLCanvas('disp-ds', dstW, dstH);
@@ -158,12 +164,5 @@ function downscaleToDataURL(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(src as unknown as CanvasImageSource, 0, 0, srcW, srcH, 0, 0, dstW, dstH);
-  return tmp.toDataURL('image/webp', 1.0);
-}
-
-function offscreenToDataURL(canvas: OffscreenCanvas): string {
-  const tmp = scratchHTMLCanvas('encode', canvas.width, canvas.height);
-  const tctx = tmp.getContext('2d', { willReadFrequently: true })!;
-  tctx.drawImage(canvas as unknown as CanvasImageSource, 0, 0);
-  return tmp.toDataURL('image/webp', 1.0);
+  return encodeCanvas(tmp);
 }

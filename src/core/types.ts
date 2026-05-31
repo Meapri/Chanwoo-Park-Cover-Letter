@@ -30,16 +30,16 @@ export type LiquidGlassMaterialPreset = 'auto' | 'subtle' | 'balanced' | 'vivid'
 export interface LiquidGlassOptions {
   /** Corner radius in px. 'pill' = height/2. 'auto' reads current computed border-radius. Default: 'auto'. */
   radius?: number | 'auto' | 'pill';
-  /** Reference lens depth in px. The selected profile scales this value. Use 'auto' for the engine default. */
-  thickness?: number | 'auto';
-  /** Reference edge refraction in px. The selected profile scales and caps this value. Use 'auto' for the engine default. */
-  refraction?: number | 'auto';
+  /** Reference lens depth in px. The selected profile scales this value. Default: 44. */
+  thickness?: number;
+  /** Reference edge refraction in px. The selected profile scales and caps this value. Default: 46. */
+  refraction?: number;
   /** Chromatic dispersion (0–1). Pulls R/G/B apart at the edges. Default: 0.03. */
   chromaticAberration?: number;
-  /** Reference backdrop blur in px. The selected variant and profile scale this value. Use 'auto' for the variant default. */
-  blur?: number | 'auto';
-  /** Saturation boost as %. 100 = neutral. Use 'auto' for the engine default. */
-  saturation?: number | 'auto';
+  /** Reference backdrop blur in px. The selected variant and profile scale this value. */
+  blur?: number;
+  /** Saturation boost as %. 100 = neutral. Default: 150. */
+  saturation?: number;
   /**
    * Variant. Apple defines Regular and Clear; `tinted` is kept as a legacy
    * compatibility shortcut. Prefer `variant: 'regular'` plus `tint`.

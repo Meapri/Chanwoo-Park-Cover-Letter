@@ -34,11 +34,19 @@ import { resolveLiquidGlassAutoProfile } from './AutoProfile';
 import { FilterChain } from './FilterChain';
 import { getDisplacementMap, getSpecularMap } from './MapCache';
 import { registerPointerLight, unregisterPointerLight } from './PointerField';
+import { getWebGLRefractor } from './WebGLRefractor';
+import type { RefractorBoxParams } from './WebGLRefractor';
 import { enqueueBuild } from './BuildQueue';
+import {
+  isLiquidGlassAndroid,
+  isLiquidGlassHoverless,
+  isLiquidGlassMobileLike,
+  resolveLiquidGlassAutoQuality,
+} from './DeviceProfile';
 
 const VARIANT_TINT: Record<LiquidGlassVariant, { light: string; dark: string }> = {
   regular: {
-    light: 'rgba(255, 255, 255, 0.07)', // light, transparent — content shines through
+    light: 'rgba(255, 255, 255, 0.14)', // light, transparent — content shines through
     dark: 'rgba(0, 0, 0, 0.2)',
   },
   clear: {
@@ -47,7 +55,7 @@ const VARIANT_TINT: Record<LiquidGlassVariant, { light: string; dark: string }> 
   },
   tinted: {
     // Legacy shortcut. Official Apple guidance uses Regular/Clear plus tinting.
-    light: 'rgba(255, 255, 255, 0.22)',
+    light: 'rgba(255, 255, 255, 0.32)',
     dark: 'rgba(30, 30, 36, 0.42)',
   },
 };
@@ -73,10 +81,10 @@ const VARIANT_BLUR: Record<LiquidGlassVariant, number> = {
 const DEFAULT_OPTIONS: ResolvedOptions = {
   radius: 22, // Apple's standard corner radius
   thickness: 44, // lens depth — drives how pronounced/thick the edge lensing is
-  refraction: 30, // edge lensing strength (px) — concentrated at the border
+  refraction: 46, // edge lensing strength (px) — concentrated at the border
   chromaticAberration: 0.03,
-  blur: 5, // light frost, backdrop reads through so the lensing is visible
-  saturation: 142, // gentle lift, backdrop stays close to natural
+  blur: 7, // light frost, backdrop reads through so the lensing is visible
+  saturation: 150, // gentle lift, backdrop stays close to natural
   variant: 'regular',
   profile: 'auto',
   preset: 'auto',
@@ -93,7 +101,7 @@ const DEFAULT_OPTIONS: ResolvedOptions = {
   lazy: false,
   lazyMargin: '200px',
   root: null,
-  fallbackFilter: 'blur(16px) saturate(1.65)',
+  fallbackFilter: 'blur(20px) saturate(1.8)',
   respectReducedMotion: true,
 };
 
@@ -158,7 +166,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 0.3,
     blur: 0.95,
     specular: 0.5,
-    shadow: 0.48,
+    shadow: 0.7,
     blurReferenceShortSide: 150,
     minBlurScale: 0.72,
   },
@@ -170,7 +178,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 0.9,
     blur: 0.75,
     specular: 1.0,
-    shadow: 0.46,
+    shadow: 0.65,
     blurReferenceShortSide: 140,
     minBlurScale: 0.45,
   },
@@ -180,7 +188,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 1,
     blur: 1,
     specular: 1,
-    shadow: 0.62,
+    shadow: 1,
     blurReferenceShortSide: DEFAULT_SURFACE_REFERENCE_SHORT_SIDE,
     minBlurScale: DEFAULT_MIN_SIZE_BLUR_SCALE,
   },
@@ -192,7 +200,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 1.18,
     blur: 1.15,
     specular: 1.12,
-    shadow: 0.82,
+    shadow: 1.5,
     blurReferenceShortSide: 260,
     minBlurScale: 0.5,
   },
@@ -203,7 +211,7 @@ const OPTICAL_PROFILE: Record<Exclude<LiquidGlassOpticalProfile, 'auto'>, Optica
     refraction: 0.88,
     blur: 0.9,
     specular: 1,
-    shadow: 0.44,
+    shadow: 0.6,
     blurReferenceShortSide: 150,
     minBlurScale: 0.55,
   },
@@ -246,11 +254,89 @@ const SUPPORTS_MOZ_ELEMENT =
   typeof CSS.supports === 'function' &&
   CSS.supports('background-image', '-moz-element(#lg)');
 
+/**
+ * Phone/tablet class. backdrop-filter + an SVG filter is very heavy on mobile
+ * GPUs — it is re-run every frame the backdrop scrolls — so on mobile we render
+ * the maps much smaller, frost lighter, drop the chromatic pass, and lazily
+ * tear down off-screen glass so only what's visible costs anything.
+ */
+const IS_MOBILE =
+  isLiquidGlassMobileLike();
+const IS_ANDROID = isLiquidGlassAndroid();
+
+/** Touch devices with no hover gain nothing from the pointer-tracked edge light,
+ * and updating it during a touch-scroll just costs style recalcs. */
+const NO_HOVER =
+  isLiquidGlassHoverless();
+
 let sceneIdCounter = 0;
 
-function resolveAutoNumber(value: number | 'auto' | undefined, fallback: number): number {
-  if (value === undefined || value === 'auto') return fallback;
-  return Number.isFinite(value) ? value : fallback;
+// One shared window-resize listener for ALL instances (a page with hundreds of
+// glass elements shouldn't register hundreds of listeners). Subscribers run on
+// resize and unsubscribe on destroy.
+const sharedResizeSubs = new Set<() => void>();
+let sharedResizeBound = false;
+function subscribeResize(fn: () => void): () => void {
+  sharedResizeSubs.add(fn);
+  if (!sharedResizeBound && typeof window !== 'undefined') {
+    sharedResizeBound = true;
+    window.addEventListener(
+      'resize',
+      () => {
+        for (const f of sharedResizeSubs) {
+          try {
+            f();
+          } catch {
+            /* one subscriber must not break the rest */
+          }
+        }
+      },
+      { passive: true }
+    );
+  }
+  return () => sharedResizeSubs.delete(fn);
+}
+
+type ScrollSafeSubscriber = (active: boolean) => void;
+
+const scrollSafeSubs = new Set<ScrollSafeSubscriber>();
+let scrollSafeBound = false;
+let scrollSafeActive = false;
+let scrollSafeEndTimer: number | null = null;
+
+function notifyScrollSafe(active: boolean): void {
+  if (scrollSafeActive === active) return;
+  scrollSafeActive = active;
+  for (const fn of scrollSafeSubs) {
+    try {
+      fn(active);
+    } catch {
+      /* one subscriber must not break the rest */
+    }
+  }
+}
+
+function subscribeScrollSafe(fn: ScrollSafeSubscriber): () => void {
+  scrollSafeSubs.add(fn);
+  if (!scrollSafeBound && typeof window !== 'undefined') {
+    scrollSafeBound = true;
+    window.addEventListener(
+      'scroll',
+      () => {
+        notifyScrollSafe(true);
+        if (scrollSafeEndTimer !== null) window.clearTimeout(scrollSafeEndTimer);
+        scrollSafeEndTimer = window.setTimeout(() => {
+          scrollSafeEndTimer = null;
+          notifyScrollSafe(false);
+        }, 140);
+      },
+      { passive: true, capture: true }
+    );
+  }
+  return () => {
+    scrollSafeSubs.delete(fn);
+    if (scrollSafeSubs.size === 0) notifyScrollSafe(false);
+  };
 }
 
 /**
@@ -266,19 +352,18 @@ function parseBgLuminance(color: string): number | null {
   return (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255;
 }
 
-/** Cheap device-class heuristic for quality:'auto'. */
-function autoQuality(): Exclude<LiquidGlassQuality, 'auto'> {
-  if (typeof navigator === 'undefined') return 'balanced';
-  const cores = navigator.hardwareConcurrency ?? 4;
-  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
-  if (cores <= 4 || mem <= 4) return 'balanced';
-  return 'high';
-}
-
 type WebkitStyle = CSSStyleDeclaration & { webkitBackdropFilter?: string };
 
 function roundCss(value: number): string {
   return String(Math.round(value * 1000) / 1000);
+}
+
+/** Parse a CSS rgb/rgba color to [r,g,b,a] in 0..1 (for the GPU tint uniform). */
+function parseRgba(color: string): [number, number, number, number] {
+  const m = color.match(/rgba?\(([^)]+)\)/);
+  if (!m) return [1, 1, 1, 0];
+  const p = m[1].split(',').map((s) => parseFloat(s));
+  return [(p[0] || 0) / 255, (p[1] || 0) / 255, (p[2] || 0) / 255, p[3] == null ? 1 : p[3]];
 }
 
 /** Ensure the scene element has an id so `-moz-element(#id)` can reference it. */
@@ -297,6 +382,22 @@ function stripCloneInteractivity(clone: HTMLElement): void {
 }
 
 export class LiquidGlass {
+  private static readonly autoQualityInstances = new Set<LiquidGlass>();
+  private static autoQualityRaf = 0;
+
+  private static requestAutoQualityRecalc(): void {
+    if (LiquidGlass.autoQualityRaf || typeof requestAnimationFrame !== 'function') return;
+    LiquidGlass.autoQualityRaf = requestAnimationFrame(() => {
+      LiquidGlass.autoQualityRaf = 0;
+      const visible = Array.from(LiquidGlass.autoQualityInstances).filter(
+        (glass) => glass.autoQualityVisible && !glass.destroyed && !glass.suspended
+      ).length;
+      for (const glass of LiquidGlass.autoQualityInstances) {
+        if (!glass.destroyed) glass.refreshAutoQuality(visible);
+      }
+    });
+  }
+
   readonly element: HTMLElement;
   private options: ResolvedOptions;
   private quality: Exclude<LiquidGlassQuality, 'auto'>;
@@ -304,6 +405,7 @@ export class LiquidGlass {
   private filter: FilterChain | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private intersectionObserver: IntersectionObserver | null = null;
+  private autoQualityObserver: IntersectionObserver | null = null;
   private mqlScheme: MediaQueryList | null = null;
   private mqlListener: ((e: MediaQueryListEvent) => void) | null = null;
   private currentWidth = 0;
@@ -318,20 +420,34 @@ export class LiquidGlass {
   /** backdropSource refraction state (Firefox -moz-element / Safari DOM clone). */
   private backdropSceneEl: HTMLElement | null = null;
   private refractClone: HTMLElement | null = null;
-  private backdropMode: 'moz' | 'clone' | null = null;
+  private backdropMode: 'webgl' | 'moz' | 'clone' | null = null;
   private backdropSyncRaf = 0;
+  /** Primary GPU refraction (shared WebGL canvas) is active for this element. */
+  private usesGpu = false;
+  private gpuHandle: { destroy: () => void; refresh: () => void } | null = null;
+  /** Tracks devicePixelRatio so a browser-zoom / monitor switch re-bakes maps. */
+  private lastDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+  /** Cancels a queued (time-sliced) initial build if it hasn't run yet. */
   private pendingBuild: (() => void) | null = null;
+  /** Unsubscribe from the shared window-resize listener. */
+  private unsubResize: (() => void) | null = null;
+  /** Unsubscribe from the shared mobile scroll-safe listener. */
+  private unsubScrollSafe: (() => void) | null = null;
   private regenTimer: number | null = null;
+  /** Invalidates async map encodes that finish after a newer build wins. */
+  private buildGeneration = 0;
   /** Backdrop-aware shadow multiplier (1 = neutral; >1 darker backdrop). */
   private shadowAdapt = 1;
   /** Resolved light/dark for scheme:'adaptive' (null = fall back to OS). */
   private resolvedAdaptiveScheme: 'light' | 'dark' | null = null;
   private scrollRaf = 0;
+  private autoQualityVisible = true;
+  private scrollSafeActive = false;
 
   constructor(element: HTMLElement, options: LiquidGlassOptions = {}) {
     this.element = element;
     this.options = this.resolve(options);
-    this.quality = this.options.quality === 'auto' ? autoQuality() : this.options.quality;
+    this.quality = 'balanced';
     this.root = this.resolveRoot();
 
     const computed = getComputedStyle(element);
@@ -342,6 +458,7 @@ export class LiquidGlass {
     const rect = element.getBoundingClientRect();
     this.currentWidth = Math.max(1, rect.width);
     this.currentHeight = Math.max(1, rect.height);
+    this.quality = this.resolveQuality(1);
 
     this.applyTint();
     if (this.options.applyRadius) {
@@ -358,7 +475,15 @@ export class LiquidGlass {
     // Decide the rendering path once.
     this.usesFallback = this.shouldFallback();
 
-    if (this.usesFallback) {
+    // Chromium keeps its superior native backdrop-filter. On the fallback path
+    // (Safari/Firefox, or forced via quality:'low') a refraction scene routes
+    // the box through the shared WebGL renderer instead of the CSS-only frost.
+    // The expensive map build is time-sliced (BuildQueue) so a page full of
+    // glass doesn't freeze on load — the tint + edges show immediately and the
+    // refraction/frost materializes within a few frames.
+    if (this.usesFallback && !this.reducedTransparency && this.tryInstallGpu()) {
+      this.usesGpu = true;
+    } else if (this.usesFallback) {
       this.applyFallback();
     } else if (this.options.lazy && typeof IntersectionObserver !== 'undefined') {
       this.setupLazy();
@@ -366,8 +491,11 @@ export class LiquidGlass {
       this.scheduleBuild(() => this.installFilter());
     }
 
-    // Size tracking (skip while suspended/fallback — fallback needs no regen).
-    if (!this.usesFallback) {
+    // Size tracking for EVERY path (native, frost fallback, GPU) — so the glass
+    // stays correct through responsive layouts, window resizes, orientation
+    // changes, and being shown after starting at zero size. ResizeObserver fires
+    // on the element's own box change, which covers all of the above.
+    if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const box = entry.borderBoxSize?.[0];
@@ -389,6 +517,15 @@ export class LiquidGlass {
       this.resizeObserver.observe(element, { box: 'border-box' });
     }
 
+    // Browser zoom / moving to a different-DPR display changes devicePixelRatio
+    // without changing the element's CSS size, so ResizeObserver won't catch it —
+    // re-bake the maps at the new pixel density when that happens. One shared
+    // window listener serves every instance.
+    this.unsubResize = subscribeResize(this.onWindowResize);
+
+    if (this.options.quality === 'auto') this.setupAutoQualityTracking();
+    if (this.shouldUseScrollSafe()) this.unsubScrollSafe = subscribeScrollSafe(this.onScrollSafeChange);
+
     if (this.options.scheme === 'auto' && typeof window.matchMedia === 'function') {
       this.mqlScheme = window.matchMedia('(prefers-color-scheme: dark)');
       this.mqlListener = (): void => this.applyTint();
@@ -397,8 +534,10 @@ export class LiquidGlass {
 
     // Pointer-tracked edge light for every glass element (core, not just
     // .lg-interactive). The CSS `.liquid-glass::after` consumes the vars — pure
-    // CSS/JS, so it works on the Safari/Firefox fallback too.
-    if (!this.reducedTransparency) registerPointerLight(this.element);
+    // CSS/JS, so it works on the Safari/Firefox fallback too. Skipped on
+    // hover-less touch devices: it gains nothing there and updating it during a
+    // touch-scroll only costs style recalcs.
+    if (!this.reducedTransparency && !NO_HOVER) registerPointerLight(this.element);
 
     // Sample the backdrop once laid out (content-aware shadow + adaptive scheme).
     // Also runs on the fallback path: luminance sampling is plain DOM, so Safari
@@ -418,7 +557,11 @@ export class LiquidGlass {
     const prev = this.options;
     const prevQuality = this.quality;
     this.options = this.resolve({ ...this.optionsAsInput(), ...partial });
-    this.quality = this.options.quality === 'auto' ? autoQuality() : this.options.quality;
+    this.quality = this.resolveQuality(this.currentVisibleAutoQualityCount());
+    if (prev.quality !== this.options.quality) {
+      if (this.options.quality === 'auto') this.setupAutoQualityTracking();
+      else this.teardownAutoQualityTracking();
+    }
     this.applyTint();
     if (this.options.applyRadius) {
       this.element.style.borderRadius = `${this.computedRadius()}px`;
@@ -432,6 +575,13 @@ export class LiquidGlass {
       this.usesFallback !== this.shouldFallback()
     ) {
       this.rebuild();
+      return;
+    }
+
+    if (prevQuality !== this.quality) this.refreshScrollSafeSubscription();
+
+    if (this.usesGpu) {
+      this.gpuHandle?.refresh(); // live param change → re-upload uniforms/maps
       return;
     }
 
@@ -517,9 +667,11 @@ export class LiquidGlass {
   /** Detach the GPU filter but keep the instance alive (cheap show/hide). */
   suspend(): void {
     if (this.suspended || this.destroyed) return;
+    this.setScrollSafe(false);
     this.suspended = true;
     this.cancelPendingBuild();
     this.removeFallbackFx();
+    this.teardownGpu();
     this.element.style.backdropFilter = 'none';
     (this.element.style as WebkitStyle).webkitBackdropFilter = 'none';
   }
@@ -528,7 +680,9 @@ export class LiquidGlass {
   resume(): void {
     if (!this.suspended || this.destroyed) return;
     this.suspended = false;
-    if (this.usesFallback) {
+    if (this.usesFallback && !this.reducedTransparency && this.tryInstallGpu()) {
+      this.usesGpu = true;
+    } else if (this.usesFallback) {
       this.applyFallback();
     } else if (this.filter) {
       const css = this.filter.url;
@@ -537,6 +691,8 @@ export class LiquidGlass {
     } else {
       this.installFilter();
     }
+    this.refreshScrollSafeSubscription();
+    LiquidGlass.requestAutoQualityRecalc();
   }
 
   destroy(): void {
@@ -550,13 +706,20 @@ export class LiquidGlass {
     this.resizeObserver = null;
     this.intersectionObserver?.disconnect();
     this.intersectionObserver = null;
+    this.teardownAutoQualityTracking();
     if (this.mqlScheme && this.mqlListener) {
       this.mqlScheme.removeEventListener('change', this.mqlListener);
     }
     window.removeEventListener('scroll', this.onBackdropScroll, { capture: true } as EventListenerOptions);
+    this.unsubResize?.();
+    this.unsubResize = null;
+    this.unsubScrollSafe?.();
+    this.unsubScrollSafe = null;
     if (this.scrollRaf) cancelAnimationFrame(this.scrollRaf);
+    this.setScrollSafe(false);
     this.cancelPendingBuild();
     this.removeFallbackFx();
+    this.teardownGpu();
     this.filter?.destroy();
     this.filter = null;
     unregisterPointerLight(this.element);
@@ -566,6 +729,113 @@ export class LiquidGlass {
   }
 
   // ── internals ────────────────────────────────────────────────────────────
+
+  private resolveQuality(visibleGlassCount = 1): Exclude<LiquidGlassQuality, 'auto'> {
+    if (this.options.quality !== 'auto') return this.options.quality;
+    return resolveLiquidGlassAutoQuality({
+      mobile: IS_MOBILE,
+      android: IS_ANDROID,
+      hoverNone: NO_HOVER,
+      hardwareConcurrency: typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : undefined,
+      deviceMemory:
+        typeof navigator !== 'undefined'
+          ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+          : undefined,
+      devicePixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio || 1 : undefined,
+      visibleGlassCount,
+      profile: this.resolveOpticalProfile(),
+      width: this.currentWidth,
+      height: this.currentHeight,
+    });
+  }
+
+  private currentVisibleAutoQualityCount(): number {
+    return Math.max(
+      1,
+      Array.from(LiquidGlass.autoQualityInstances).filter(
+        (glass) => glass.autoQualityVisible && !glass.destroyed && !glass.suspended
+      ).length
+    );
+  }
+
+  private setupAutoQualityTracking(): void {
+    LiquidGlass.autoQualityInstances.add(this);
+    if (!IS_MOBILE) return;
+    if (this.autoQualityObserver || typeof IntersectionObserver === 'undefined') {
+      LiquidGlass.requestAutoQualityRecalc();
+      return;
+    }
+    this.autoQualityObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries[entries.length - 1]?.isIntersecting ?? true;
+        if (this.autoQualityVisible === visible) return;
+        this.autoQualityVisible = visible;
+        LiquidGlass.requestAutoQualityRecalc();
+      },
+      { rootMargin: '0px' }
+    );
+    this.autoQualityObserver.observe(this.element);
+    LiquidGlass.requestAutoQualityRecalc();
+  }
+
+  private teardownAutoQualityTracking(): void {
+    LiquidGlass.autoQualityInstances.delete(this);
+    this.autoQualityObserver?.disconnect();
+    this.autoQualityObserver = null;
+    this.autoQualityVisible = true;
+    LiquidGlass.requestAutoQualityRecalc();
+  }
+
+  private refreshAutoQuality(visibleGlassCount: number): void {
+    if (this.options.quality !== 'auto') return;
+    const next = this.resolveQuality(visibleGlassCount);
+    if (next === this.quality) return;
+    this.quality = next;
+    this.rebuild();
+  }
+
+  private shouldUseScrollSafe(): boolean {
+    if (!IS_MOBILE || !IS_CHROMIUM || this.options.quality !== 'auto') return false;
+    if (this.reducedTransparency || this.usesFallback || this.usesGpu || this.suspended) return false;
+    const profile = this.resolveOpticalProfile();
+    if (profile !== 'card' && profile !== 'panel') return false;
+    const short = Math.min(this.currentWidth, this.currentHeight);
+    const area = this.currentWidth * this.currentHeight;
+    return short >= 120 || area >= 36_000;
+  }
+
+  private refreshScrollSafeSubscription(): void {
+    const shouldSubscribe = this.shouldUseScrollSafe();
+    if (shouldSubscribe && !this.unsubScrollSafe) {
+      this.unsubScrollSafe = subscribeScrollSafe(this.onScrollSafeChange);
+    } else if (!shouldSubscribe && this.unsubScrollSafe) {
+      this.unsubScrollSafe();
+      this.unsubScrollSafe = null;
+      this.setScrollSafe(false);
+    }
+  }
+
+  private onScrollSafeChange = (active: boolean): void => {
+    this.setScrollSafe(active);
+  };
+
+  private setScrollSafe(active: boolean): void {
+    if (active === this.scrollSafeActive) return;
+    this.scrollSafeActive = active;
+    if (this.destroyed || this.suspended || this.usesFallback || this.usesGpu) return;
+    if (active) {
+      if (!this.filter) return;
+      const css = this.profiledFallbackFilter();
+      this.element.style.backdropFilter = css;
+      (this.element.style as WebkitStyle).webkitBackdropFilter = css;
+      return;
+    }
+    if (this.filter) {
+      const css = this.filter.url;
+      this.element.style.backdropFilter = css;
+      (this.element.style as WebkitStyle).webkitBackdropFilter = css;
+    }
+  }
 
   private resolveRoot(): Document | ShadowRoot {
     if (this.options.root) return this.options.root;
@@ -582,29 +852,39 @@ export class LiquidGlass {
     return false;
   }
 
+  /** Queue an expensive build (map gen / specular) on the time-sliced scheduler,
+   * cancelling any build already pending for this element. */
+  private scheduleBuild(fn: () => void | Promise<void>): void {
+    this.cancelPendingBuild();
+    this.pendingBuild = enqueueBuild(() => {
+      this.pendingBuild = null;
+      if (!this.destroyed && !this.suspended) return fn();
+    });
+  }
+
+  private cancelPendingBuild(): void {
+    this.buildGeneration++;
+    if (this.pendingBuild) {
+      this.pendingBuild();
+      this.pendingBuild = null;
+    }
+  }
+
+  private isBuildCurrent(generation: number): boolean {
+    return !this.destroyed && !this.suspended && generation === this.buildGeneration;
+  }
+
   private applyFallback(): void {
     this.usesFallback = true;
+    // The CSS frost is instant; apply it now so the element reads as glass
+    // immediately. Enhanced fallback overlays are skipped for quality:'low'.
     const css =
       this.options.fallbackFilter === DEFAULT_OPTIONS.fallbackFilter
         ? this.profiledFallbackFilter()
         : this.options.fallbackFilter;
     this.element.style.backdropFilter = css;
     (this.element.style as WebkitStyle).webkitBackdropFilter = css;
-    this.scheduleBuild(() => this.installFallbackFx());
-  }
-
-  private scheduleBuild(fn: () => void): void {
-    this.cancelPendingBuild();
-    this.pendingBuild = enqueueBuild(() => {
-      this.pendingBuild = null;
-      if (!this.destroyed && !this.suspended) fn();
-    });
-  }
-
-  private cancelPendingBuild(): void {
-    if (!this.pendingBuild) return;
-    this.pendingBuild();
-    this.pendingBuild = null;
+    if (this.fallbackEnhanced()) this.scheduleBuild(() => this.installFallbackFx());
   }
 
   private profiledFallbackFilter(): string {
@@ -616,7 +896,7 @@ export class LiquidGlass {
   /** Enhancements active on the fallback path (Safari/Firefox), but not for the
    * deliberately-calm reduced-transparency path. */
   private fallbackEnhanced(): boolean {
-    return this.usesFallback && !this.reducedTransparency;
+    return this.usesFallback && !this.reducedTransparency && this.quality !== 'low';
   }
 
   /**
@@ -631,7 +911,64 @@ export class LiquidGlass {
    * The pointer light, adaptive scheme and content-aware shadow are already
    * enabled on this path; this adds the parts that lived inside the filter.
    */
-  private installFallbackFx(): void {
+  /**
+   * Primary GPU path: render this element's refraction through the shared WebGL
+   * canvas (same on every browser). Needs `backdropSource` to resolve to an
+   * uploadable scene (<canvas>/<img>/<video>) and WebGL2. The element becomes a
+   * transparent window — its tint/refraction come from the shader, while its
+   * box-shadow, rim light and text stay CSS. Returns false to fall through to
+   * the native filter / CSS fallback.
+   */
+  private tryInstallGpu(): boolean {
+    const scene = this.resolveBackdropSource();
+    if (!scene) return false;
+    const refractor = getWebGLRefractor();
+    if (!refractor) return false;
+    if (!refractor.canvas.isConnected) document.body.appendChild(refractor.canvas);
+    const handle = refractor.register(this.element, scene, () => this.gpuParams());
+    if (!handle) return false;
+    this.gpuHandle = handle;
+    // Transparent window: the shader paints the backdrop; drop the element's own
+    // background tint and any backdrop-filter.
+    this.element.style.backgroundColor = 'transparent';
+    this.dropOwnBackdrop();
+    return true;
+  }
+
+  private async gpuParams(): Promise<RefractorBoxParams> {
+    const [disp, specularMapUrl] = await Promise.all([
+      getDisplacementMap({
+        width: this.currentWidth,
+        height: this.currentHeight,
+        radius: this.computedRadius(),
+        thickness: this.computedThickness(),
+        pixelRatio: this.displacementDpr(),
+        refraction: this.profiledRefraction(),
+      }),
+      this.options.specular ? this.specularMapUrl() : Promise.resolve(null),
+    ]);
+    return {
+      displacementMapUrl: disp.url,
+      displacementPadding: disp.padding,
+      specularMapUrl,
+      refraction: this.effectiveRefraction(),
+      blur: this.effectiveBlur(),
+      chromaticAberration: this.effectiveChromatic(),
+      saturation: this.options.saturation,
+      radius: this.computedRadius(),
+      tint: parseRgba(this.options.tint ?? this.variantTint()),
+    };
+  }
+
+  private teardownGpu(): void {
+    if (!this.gpuHandle) return;
+    this.gpuHandle.destroy();
+    this.gpuHandle = null;
+    this.usesGpu = false;
+  }
+
+  private async installFallbackFx(): Promise<void> {
+    const generation = ++this.buildGeneration;
     this.removeFallbackFx();
     if (!this.fallbackEnhanced() || this.suspended) return;
 
@@ -639,7 +976,7 @@ export class LiquidGlass {
     // refraction here too (Firefox via -moz-element, others via a DOM clone).
     const scene = this.resolveBackdropSource();
     if (scene) {
-      this.installBackdropRefraction(scene);
+      await this.installBackdropRefraction(scene, generation);
       return;
     }
 
@@ -656,10 +993,14 @@ export class LiquidGlass {
       this.dropOwnBackdrop();
       layer.style.background = this.options.refractBackground;
       layer.style.backgroundSize = 'cover';
-      this.setLayerFilter(layer, this.buildRefractFilter());
+      const filterUrl = await this.buildRefractFilter(generation);
+      if (!filterUrl || !this.isBuildCurrent(generation)) return;
+      this.setLayerFilter(layer, filterUrl);
     } else if (this.options.specular) {
       // Specular rim only — screen-blend the baked highlight over the frost.
-      layer.style.backgroundImage = `url("${this.specularMapUrl()}")`;
+      const specularUrl = await this.specularMapUrl();
+      if (!this.isBuildCurrent(generation)) return;
+      layer.style.backgroundImage = `url("${specularUrl}")`;
       layer.style.backgroundSize = '100% 100%';
       layer.style.mixBlendMode = 'screen';
     } else {
@@ -679,7 +1020,10 @@ export class LiquidGlass {
    * A regular `filter:` (supported everywhere) then displaces that source with
    * the same map Chromium runs in backdrop-filter, so the result matches.
    */
-  private installBackdropRefraction(scene: HTMLElement): void {
+  private async installBackdropRefraction(scene: HTMLElement, generation: number): Promise<void> {
+    // WebGL is the primary path (tryInstallGpu, tried before this). This is the
+    // last-resort fallback when WebGL2 / an uploadable scene isn't available:
+    // Firefox uses a LIVE -moz-element image, others a position-synced clone.
     const layer = document.createElement('div');
     layer.setAttribute('aria-hidden', 'true');
     layer.style.cssText =
@@ -701,7 +1045,9 @@ export class LiquidGlass {
       this.backdropMode = 'clone';
     }
 
-    this.setLayerFilter(layer, this.buildRefractFilter());
+    const filterUrl = await this.buildRefractFilter(generation);
+    if (!filterUrl || !this.isBuildCurrent(generation)) return;
+    this.setLayerFilter(layer, filterUrl);
     // The scene copy IS the body now — drop the element's own backdrop frost.
     this.dropOwnBackdrop();
 
@@ -761,15 +1107,20 @@ export class LiquidGlass {
     return el;
   }
 
-  private buildRefractFilter(): string {
-    const disp = getDisplacementMap({
-      width: this.currentWidth,
-      height: this.currentHeight,
-      radius: this.computedRadius(),
-      thickness: this.computedThickness(),
-      pixelRatio: this.displacementDpr(),
-      refraction: this.profiledRefraction(),
-    });
+  private async buildRefractFilter(generation: number): Promise<string | null> {
+    const [disp, specularMapUrl] = await Promise.all([
+      getDisplacementMap({
+        width: this.currentWidth,
+        height: this.currentHeight,
+        radius: this.computedRadius(),
+        thickness: this.computedThickness(),
+        pixelRatio: this.displacementDpr(),
+        refraction: this.profiledRefraction(),
+      }),
+      this.options.specular ? this.specularMapUrl() : Promise.resolve(null),
+    ]);
+    if (!this.isBuildCurrent(generation)) return null;
+    this.filter?.destroy();
     this.filter = new FilterChain({
       refraction: this.effectiveRefraction(),
       chromaticAberration: 0, // single pass on the fallback path
@@ -779,7 +1130,7 @@ export class LiquidGlass {
       height: this.currentHeight,
       displacementMapUrl: disp.url,
       displacementPadding: disp.padding,
-      specularMapUrl: this.options.specular ? this.specularMapUrl() : null,
+      specularMapUrl,
       root: this.root,
     });
     return this.filter.url;
@@ -813,7 +1164,7 @@ export class LiquidGlass {
     this.fxLayer = null;
   }
 
-  private specularMapUrl(): string {
+  private specularMapUrl(): Promise<string> {
     return getSpecularMap({
       width: this.currentWidth,
       height: this.currentHeight,
@@ -830,17 +1181,23 @@ export class LiquidGlass {
         const visible = entries[entries.length - 1]?.isIntersecting ?? false;
         if (this.destroyed || this.suspended) return;
         if (visible) {
-          if (!this.filter) this.installFilter();
-          else {
+          if (!this.filter) {
+            // First reveal: time-slice the map build so several boxes scrolling
+            // into view at once don't block the scroll.
+            this.scheduleBuild(() => this.installFilter());
+          } else {
             const css = this.filter.url;
             this.element.style.backdropFilter = css;
             (this.element.style as WebkitStyle).webkitBackdropFilter = css;
           }
-        } else if (this.filter) {
-          // Off-screen: drop the GPU cost but keep the built filter for a
-          // cheap re-attach when it scrolls back in.
-          this.element.style.backdropFilter = 'none';
-          (this.element.style as WebkitStyle).webkitBackdropFilter = 'none';
+        } else {
+          // Off-screen: don't build a filter we won't show, and drop the GPU
+          // cost of any built one (keep it for a cheap re-attach on return).
+          this.cancelPendingBuild();
+          if (this.filter) {
+            this.element.style.backdropFilter = 'none';
+            (this.element.style as WebkitStyle).webkitBackdropFilter = 'none';
+          }
         }
       },
       { rootMargin: this.options.lazyMargin }
@@ -883,41 +1240,63 @@ export class LiquidGlass {
     const preset = this.presetTuning();
     const sizeScale = Math.max(tuning.minBlurScale, Math.min(1, short / tuning.blurReferenceShortSide));
     const cap = short * 0.14;
-    return Math.min(this.options.blur * tuning.blur * preset.blur * sizeScale, cap);
+    const blur = Math.min(this.options.blur * tuning.blur * preset.blur * sizeScale, cap);
+    // A Gaussian backdrop blur's GPU cost grows with its radius; cap it tighter
+    // on mobile where backdrop-filter is re-run every scroll frame.
+    return IS_MOBILE ? Math.min(blur * 0.85, 9) : blur;
   }
 
   /**
    * The displacement map is a smooth gradient that feImage bilinear-upscales to
-   * the element box, so it can render well below 1× with no visible loss. Large
-   * panels carry a broad, smooth lens that upscales especially cleanly, so they
-   * drop further (0.45×) — quadratically less canvas area / encode work — while
-   * small controls keep 0.6× so their tighter edge stays crisp.
+   * the element box, so it can render well below 1× with no visible loss. Keep
+   * the default output around 0.4×; the map is supersampled before downscale, so
+   * the rim stays smooth while canvas area / encode work drops aggressively.
    */
   private displacementDpr(): number {
-    const short = Math.min(this.currentWidth, this.currentHeight);
-    const factor = short > 220 ? 0.45 : 0.6;
-    return this.options.mapPixelRatio * factor;
+    // The lens is a smooth field and the maps are supersampled+downscaled (so
+    // low output resolutions stay anti-aliased), letting us render the texture
+    // small — ~0.4× at the default mapPixelRatio — which cuts the per-frame
+    // backdrop-filter sampling cost with no visible stair-stepping.
+    const dpr = this.options.mapPixelRatio * 0.2;
+    return IS_MOBILE ? Math.min(dpr, 0.4) : dpr;
   }
 
   /**
-   * The specular PNG is the most expensive map to build, but users requested it 
-   * to stay at full resolution (1.0) so the edge lighting remains razor sharp.
+   * The specular rim stays sharper than the displacement map, but mobile can
+   * sample it lower; the rim is screen-blended and supersampled before encode.
    */
   private specularDpr(): number {
-    return this.options.mapPixelRatio;
+    const dpr = this.options.mapPixelRatio * (IS_MOBILE ? 0.4 : 0.65);
+    return IS_MOBILE ? Math.min(dpr, 0.8) : dpr;
   }
 
-  private installFilter(): void {
+  private async installFilter(): Promise<void> {
     if (this.suspended) return;
-    const disp = getDisplacementMap({
-      width: this.currentWidth,
-      height: this.currentHeight,
-      radius: this.computedRadius(),
-      thickness: this.computedThickness(),
-      pixelRatio: this.displacementDpr(),
-      refraction: this.profiledRefraction(),
-    });
+    this.cancelPendingBuild(); // a direct install supersedes any queued one
+    const generation = this.buildGeneration;
+    const [disp, specularMapUrl] = await Promise.all([
+      getDisplacementMap({
+        width: this.currentWidth,
+        height: this.currentHeight,
+        radius: this.computedRadius(),
+        thickness: this.computedThickness(),
+        pixelRatio: this.displacementDpr(),
+        refraction: this.profiledRefraction(),
+      }),
+      this.options.specular
+        ? getSpecularMap({
+            width: this.currentWidth,
+            height: this.currentHeight,
+            radius: this.computedRadius(),
+            thickness: this.computedThickness(),
+            pixelRatio: this.specularDpr(),
+            intensity: this.profiledSpecularIntensity(),
+          })
+        : Promise.resolve(null),
+    ]);
+    if (!this.isBuildCurrent(generation)) return;
 
+    this.filter?.destroy();
     this.filter = new FilterChain({
       refraction: this.effectiveRefraction(),
       chromaticAberration: this.effectiveChromatic(),
@@ -927,14 +1306,7 @@ export class LiquidGlass {
       height: this.currentHeight,
       displacementMapUrl: disp.url,
       displacementPadding: disp.padding,
-      specularMapUrl: this.options.specular ? getSpecularMap({
-        width: this.currentWidth,
-        height: this.currentHeight,
-        radius: this.computedRadius(),
-        thickness: this.computedThickness(),
-        pixelRatio: this.specularDpr(),
-        intensity: this.profiledSpecularIntensity(),
-      }) : null,
+      specularMapUrl,
       root: this.root,
     });
 
@@ -944,58 +1316,99 @@ export class LiquidGlass {
   }
 
   private rebuild(): void {
+    this.cancelPendingBuild();
     this.filter?.destroy();
     this.filter = null;
     this.removeFallbackFx();
+    this.teardownGpu();
     this.usesFallback = this.shouldFallback();
-    if (this.usesFallback) {
+    if (this.usesFallback && !this.reducedTransparency && !this.suspended && this.tryInstallGpu()) {
+      this.usesGpu = true;
+    } else if (this.usesFallback) {
       this.applyFallback();
     } else if (!this.suspended) {
       this.installFilter();
     }
+    this.refreshScrollSafeSubscription();
   }
 
+  /**
+   * Re-derive everything size-dependent after a resize (window/orientation/DPR/
+   * layout). Debounced and routed by the active path so a resizing element stays
+   * correct in every environment:
+   *   • GPU   → refresh the shared-canvas box (new map at the new size);
+   *   • frost → re-apply the profiled CSS blur + rebuild the specular overlay;
+   *   • native→ regenerate the displacement/specular maps and live filter attrs.
+   */
   private scheduleRegen(): void {
-    if (this.destroyed || this.usesFallback) return;
+    if (this.destroyed) return;
     if (this.regenTimer !== null) clearTimeout(this.regenTimer);
     this.regenTimer = window.setTimeout(() => {
-      this.regenTimer = null;
-      if (this.destroyed || !this.filter) return;
-      const disp = getDisplacementMap({
+      void this.regenerateAfterResize();
+    }, RESIZE_DEBOUNCE_MS);
+  }
+
+  private async regenerateAfterResize(): Promise<void> {
+    this.regenTimer = null;
+    if (this.destroyed || this.suspended) return;
+
+    if (this.usesGpu) {
+      this.gpuHandle?.refresh();
+      this.refreshScrollSafeSubscription();
+      return;
+    }
+    if (this.usesFallback) {
+      // Re-apply the size-scaled frost (and rebuild the specular overlay).
+      this.applyFallback();
+      this.adaptToBackdrop();
+      this.refreshScrollSafeSubscription();
+      return;
+    }
+    if (!this.filter) return;
+    const generation = ++this.buildGeneration;
+    const [disp, specUrl] = await Promise.all([
+      getDisplacementMap({
         width: this.currentWidth,
         height: this.currentHeight,
         radius: this.computedRadius(),
         thickness: this.computedThickness(),
         pixelRatio: this.displacementDpr(),
         refraction: this.profiledRefraction(),
-      });
-      this.filter.updateDisplacement(disp.url, this.currentWidth, this.currentHeight, disp.padding);
-      // Blur and refraction are size-dependent (capped to the short side) — re-apply.
-      this.filter.updateBlur(this.effectiveBlur());
-      this.filter.updateRefraction(this.effectiveRefraction());
-      if (this.options.specular) {
-        const specUrl = getSpecularMap({
-          width: this.currentWidth,
-          height: this.currentHeight,
-          radius: this.computedRadius(),
-          thickness: this.computedThickness(),
-          pixelRatio: this.specularDpr(),
-          intensity: this.profiledSpecularIntensity(),
-        });
-        this.filter.updateSpecular(specUrl, this.currentWidth, this.currentHeight);
-      }
-      this.adaptToBackdrop();
-    }, RESIZE_DEBOUNCE_MS);
+      }),
+      this.options.specular
+        ? getSpecularMap({
+            width: this.currentWidth,
+            height: this.currentHeight,
+            radius: this.computedRadius(),
+            thickness: this.computedThickness(),
+            pixelRatio: this.specularDpr(),
+            intensity: this.profiledSpecularIntensity(),
+          })
+        : Promise.resolve(null),
+    ]);
+    if (!this.isBuildCurrent(generation) || !this.filter) return;
+    this.filter.updateDisplacement(disp.url, this.currentWidth, this.currentHeight, disp.padding);
+    // Blur and refraction are size-dependent (capped to the short side) — re-apply.
+    this.filter.updateBlur(this.effectiveBlur());
+    this.filter.updateRefraction(this.effectiveRefraction());
+    if (specUrl) {
+      this.filter.updateSpecular(specUrl, this.currentWidth, this.currentHeight);
+    }
+    this.adaptToBackdrop();
+    this.refreshScrollSafeSubscription();
   }
 
   private applyTint(): void {
     const tint = this.options.tint ?? this.variantTint();
-    this.element.style.backgroundColor = tint;
+    // On the GPU path the shader applies the tint; the element stays a
+    // transparent window. Otherwise the element background carries the tint.
+    this.element.style.backgroundColor = this.usesGpu ? 'transparent' : tint;
     this.element.dataset.scheme = this.resolveScheme();
     // Mark adaptive elements so the stylesheet can flip the label color to keep
     // it legible against the resolved appearance (dark text on light glass,
     // light text on dark glass).
     if (this.options.scheme === 'adaptive') this.element.dataset.adaptive = '';
+    if (this.usesGpu) this.gpuHandle?.refresh(); // tint/scheme changed → re-upload uniforms
     this.applyEdges();
   }
 
@@ -1012,13 +1425,13 @@ export class LiquidGlass {
     if (!this.options.edges) return;
     const dark = this.resolveScheme() === 'dark';
     const s = this.opticalTuning().shadow;
-    const oy = (3 * s).toFixed(1);
-    const blur = (8 * s).toFixed(1);
+    const oy = (4 * s).toFixed(1);
+    const blur = (12 * s).toFixed(1);
     // Depth scales with the profile; opacity also follows the backdrop (more over
     // dark/busy content, less over a solid light background) via shadowAdapt.
-    const baseAlpha = dark ? 0.16 : 0.055;
+    const baseAlpha = dark ? 0.22 : 0.085;
     const alpha = Math.min(
-      dark ? 0.3 : 0.12,
+      dark ? 0.44 : 0.2,
       baseAlpha * Math.pow(s, 0.7) * this.shadowAdapt
     ).toFixed(3);
     const float = dark
@@ -1027,8 +1440,8 @@ export class LiquidGlass {
     // Whisper-thin baseline border + a faint top sheen — the bright edge itself
     // comes from the baked specular rim and the pointer-tracked light.
     const inset = dark
-      ? 'inset 0 0 0 0.5px rgba(255,255,255,0.055), inset 0 1px 1.5px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.12)'
-      : 'inset 0 0 0 0.5px rgba(255,255,255,0.07), inset 0 1px 1.5px rgba(255,255,255,0.11), inset 0 -2px 4px rgba(0,0,0,0.04)';
+      ? 'inset 0 0 0 0.5px rgba(255,255,255,0.07), inset 0 1.5px 2px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.16)'
+      : 'inset 0 0 0 0.5px rgba(255,255,255,0.1), inset 0 1.5px 2px rgba(255,255,255,0.18), inset 0 -3px 6px rgba(0,0,0,0.06)';
     this.element.style.boxShadow = `${inset}, ${float}`;
   }
 
@@ -1069,6 +1482,13 @@ export class LiquidGlass {
       }
     }
   }
+
+  private onWindowResize = (): void => {
+    const dpr = window.devicePixelRatio || 1;
+    if (Math.abs(dpr - this.lastDpr) < 0.01) return; // size changes handled by ResizeObserver
+    this.lastDpr = dpr;
+    this.scheduleRegen();
+  };
 
   private onBackdropScroll = (): void => {
     if (this.scrollRaf) return;
@@ -1194,7 +1614,6 @@ export class LiquidGlass {
       tagName: this.element.tagName,
       role: this.element.getAttribute('role'),
       ariaLabel: this.element.getAttribute('aria-label'),
-      href: this.element instanceof HTMLAnchorElement ? this.element.getAttribute('href') : null,
       className,
       textLength: this.element.textContent?.trim().length ?? 0,
       buttonCount: this.element.querySelectorAll('button,[role="button"]').length,
@@ -1220,18 +1639,14 @@ export class LiquidGlass {
     }
 
     const variant = opts.variant ?? DEFAULT_OPTIONS.variant;
-    const thickness = resolveAutoNumber(opts.thickness, DEFAULT_OPTIONS.thickness);
-    const refraction = resolveAutoNumber(opts.refraction, DEFAULT_OPTIONS.refraction);
-    const blur = resolveAutoNumber(opts.blur, VARIANT_BLUR[variant]);
-    const saturation = resolveAutoNumber(opts.saturation, DEFAULT_OPTIONS.saturation);
 
     return {
       radius,
-      thickness,
-      refraction,
+      thickness: opts.thickness ?? DEFAULT_OPTIONS.thickness,
+      refraction: opts.refraction ?? DEFAULT_OPTIONS.refraction,
       chromaticAberration: opts.chromaticAberration ?? DEFAULT_OPTIONS.chromaticAberration,
-      blur,
-      saturation,
+      blur: opts.blur ?? VARIANT_BLUR[variant],
+      saturation: opts.saturation ?? DEFAULT_OPTIONS.saturation,
       variant,
       profile: opts.profile ?? DEFAULT_OPTIONS.profile,
       preset: opts.preset ?? DEFAULT_OPTIONS.preset,
@@ -1245,7 +1660,9 @@ export class LiquidGlass {
       applyRadius: opts.applyRadius ?? DEFAULT_OPTIONS.applyRadius,
       mapPixelRatio: opts.mapPixelRatio ?? DEFAULT_OPTIONS.mapPixelRatio,
       quality: opts.quality ?? DEFAULT_OPTIONS.quality,
-      lazy: opts.lazy ?? DEFAULT_OPTIONS.lazy,
+      // On mobile, default to lazy so off-screen glass tears its filter down —
+      // only what's on screen costs GPU during scroll. Explicit `lazy` wins.
+      lazy: opts.lazy ?? (IS_MOBILE ? true : DEFAULT_OPTIONS.lazy),
       lazyMargin: opts.lazyMargin ?? DEFAULT_OPTIONS.lazyMargin,
       root: opts.root ?? DEFAULT_OPTIONS.root,
       fallbackFilter: opts.fallbackFilter ?? DEFAULT_OPTIONS.fallbackFilter,

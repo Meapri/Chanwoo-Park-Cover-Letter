@@ -33,8 +33,8 @@ export function scratchCanvas(slot: string, w: number, h: number): AnyCanvas {
 const htmlPool: Record<string, HTMLCanvasElement> = {};
 
 /**
- * Get a reusable *HTMLCanvasElement* for `slot` (OffscreenCanvas has no
- * toDataURL, so the data-URL encode step needs a real canvas).
+ * Get a reusable *HTMLCanvasElement* for `slot` (downsampling still needs a
+ * drawable DOM canvas even though final encoding is async via toBlob).
  */
 export function scratchHTMLCanvas(slot: string, w: number, h: number): HTMLCanvasElement {
   let c = htmlPool[slot];

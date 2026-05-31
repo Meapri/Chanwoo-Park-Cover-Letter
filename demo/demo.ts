@@ -8,10 +8,6 @@ const autoChipGlass: LiquidGlassOptions = {
   preset: 'auto',
   scheme: 'light',
   radius: 'auto',
-  refraction: 'auto',
-  thickness: 'auto',
-  blur: 'auto',
-  saturation: 'auto',
 };
 
 const autoControlGlass: LiquidGlassOptions = {
@@ -19,10 +15,6 @@ const autoControlGlass: LiquidGlassOptions = {
   preset: 'auto',
   scheme: 'light',
   radius: 'pill',
-  refraction: 'auto',
-  thickness: 'auto',
-  blur: 'auto',
-  saturation: 'auto',
 };
 
 function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
@@ -69,15 +61,7 @@ for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-glass]
 }
 
 // Initialize Interactive Elements
-document.querySelectorAll('.lg-interactive').forEach(el => {
-  new LiquidInteractive(el as HTMLElement, {
-    rotation: 5,
-    smoothing: 0.18,
-    hoverScale: 1.015,
-    pressScaleX: 1.025,
-    pressScaleY: 0.94,
-  });
-});
+LiquidInteractive.initAll();
 
 // Dynamic Background Observer removed as requested
 

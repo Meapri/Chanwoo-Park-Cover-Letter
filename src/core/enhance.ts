@@ -19,6 +19,7 @@
 
 import { LiquidGlass } from './LiquidGlass';
 import { LiquidInteractive } from './Interactive';
+import { isLiquidGlassMobileLike } from './DeviceProfile';
 import type { LiquidGlassOptions } from './types';
 
 export interface AutoEnhanceOptions {
@@ -61,9 +62,12 @@ export function autoEnhance(options: AutoEnhanceOptions = {}): LiquidGlassRegist
   const attribute = options.attribute ?? 'data-liquid-glass';
   const interactiveSelector =
     options.interactiveSelector === undefined ? '.lg-interactive' : options.interactiveSelector;
+  const candidates = Array.from(root.querySelectorAll<HTMLElement>(`[${attribute}]`));
+  const mobileDefaults: LiquidGlassOptions =
+    isLiquidGlassMobileLike() && candidates.length >= 12 ? { lazy: true, lazyMargin: '80px' } : {};
 
   const instances = new Map<HTMLElement, LiquidGlass>();
-  for (const el of Array.from(root.querySelectorAll<HTMLElement>(`[${attribute}]`))) {
+  for (const el of candidates) {
     if (instances.has(el)) continue;
     let config: LiquidGlassOptions = {};
     const raw = el.getAttribute(attribute);
@@ -80,7 +84,7 @@ export function autoEnhance(options: AutoEnhanceOptions = {}): LiquidGlassRegist
         continue;
       }
     }
-    instances.set(el, new LiquidGlass(el, { ...options.defaults, ...config }));
+    instances.set(el, new LiquidGlass(el, { ...mobileDefaults, ...options.defaults, ...config }));
   }
 
   const interactives: LiquidInteractive[] = [];

@@ -18,6 +18,7 @@
 
 import { makeSurface } from './SurfaceField';
 import { scratchCanvas, scratchHTMLCanvas } from './scratch';
+import { encodeCanvas } from './CanvasEncode';
 
 export interface SpecularMapParams {
   width: number;
@@ -46,7 +47,10 @@ const GLOSS_RADIUS = 1.42;
 const GLOSS_EXP = 1.95;
 const W_GLOSS = 0.4;
 
-export function generateSpecularMap(params: SpecularMapParams): string {
+export async function generateSpecularMap(params: SpecularMapParams): Promise<string> {
+  // The rim is a thin bright line — the part most prone to stair-stepping at a
+  // low output resolution — so supersample and downscale (anti-alias) the same
+  // way as the displacement map.
   const outDpr = params.pixelRatio;
   const ss = outDpr < 1.1 ? 2 : 1;
   const dpr = outDpr * ss;
@@ -120,17 +124,7 @@ export function generateSpecularMap(params: SpecularMapParams): string {
     dctx.imageSmoothingEnabled = true;
     dctx.imageSmoothingQuality = 'high';
     dctx.drawImage(canvas as unknown as CanvasImageSource, 0, 0, w, h, 0, 0, dstW, dstH);
-    return tmp.toDataURL('image/webp', 1.0);
+    return encodeCanvas(tmp);
   }
-  if (canvas instanceof HTMLCanvasElement) {
-    return canvas.toDataURL('image/webp', 1.0);
-  }
-  return offscreenToDataURL(canvas as OffscreenCanvas);
-}
-
-function offscreenToDataURL(canvas: OffscreenCanvas): string {
-  const tmp = scratchHTMLCanvas('encode', canvas.width, canvas.height);
-  const tctx = tmp.getContext('2d', { willReadFrequently: true })!;
-  tctx.drawImage(canvas as unknown as CanvasImageSource, 0, 0);
-  return tmp.toDataURL('image/webp', 1.0);
+  return encodeCanvas(canvas);
 }
