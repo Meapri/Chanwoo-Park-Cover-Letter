@@ -11,6 +11,21 @@
     <link rel="stylesheet" href="/demo/styles.css" />
   </head>
   <body>
+    <div class="loading-screen" data-loading-screen role="status" aria-live="polite">
+      <div class="loading-card" aria-label="페이지 로딩 안내">
+        <div class="loading-mark" aria-hidden="true">
+          <span></span>
+          <span></span>
+        </div>
+        <div class="loading-copy">
+          <strong>Chromium 브라우저 권장</strong>
+          <p>이 페이지는 Chrome, Edge 등 Chromium 기반 브라우저에서 가장 부드럽게 보입니다.</p>
+          <small data-loading-status>Liquid Glass 렌더링 준비 중</small>
+        </div>
+        <div class="loading-progress" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+
     <div class="background-scene" aria-hidden="true">
       <div class="scene-image"></div>
       <div class="scene-grid"></div>

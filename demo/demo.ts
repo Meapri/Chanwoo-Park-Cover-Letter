@@ -3,6 +3,16 @@ import type { LiquidGlassOptions } from '../src';
 
 interface GlassConfig extends LiquidGlassOptions {}
 
+const loadingScreen = document.querySelector<HTMLElement>('[data-loading-screen]');
+const loadingStatus = loadingScreen?.querySelector<HTMLElement>('[data-loading-status]');
+const chromiumLike =
+  typeof navigator !== 'undefined' &&
+  /\b(?:Chrome|Chromium|Edg|OPR|SamsungBrowser)\//.test(navigator.userAgent);
+
+if (loadingStatus) {
+  loadingStatus.textContent = chromiumLike ? 'Chromium 기반 환경 확인' : 'Chrome 또는 Edge 권장';
+}
+
 const autoChipGlass: LiquidGlassOptions = {
   profile: 'control',
   preset: 'vivid',
@@ -74,3 +84,24 @@ declare global {
   }
 }
 window.__liquidGlass = { instances, LiquidGlass };
+
+function hideLoadingScreen(): void {
+  if (!loadingScreen) return;
+  loadingScreen.classList.add('is-hidden');
+  loadingScreen.setAttribute('aria-hidden', 'true');
+  window.setTimeout(() => loadingScreen.remove(), 520);
+}
+
+const fontsReady =
+  'fonts' in document
+    ? (document as Document & { fonts: FontFaceSet }).fonts.ready.catch(() => undefined)
+    : Promise.resolve();
+const windowReady =
+  document.readyState === 'complete'
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => window.addEventListener('load', () => resolve(), { once: true }));
+const minimumLoadingTime = new Promise<void>((resolve) => window.setTimeout(resolve, 920));
+
+void Promise.all([fontsReady, windowReady, minimumLoadingTime]).finally(() => {
+  requestAnimationFrame(hideLoadingScreen);
+});
