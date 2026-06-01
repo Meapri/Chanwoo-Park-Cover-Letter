@@ -379,7 +379,8 @@ main,
 }
 
 .nav-links a,
-.nav-action {
+.nav-action,
+.language-toggle {
   min-height: 42px;
   display: inline-flex;
   align-items: center;
@@ -391,6 +392,33 @@ main,
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.language-toggle {
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.language-toggle [data-language-current] {
+  color: var(--blue);
+}
+
+.language-toggle [data-language-target] {
+  color: rgba(17, 24, 39, 0.48);
+}
+
+.language-toggle:hover {
+  background: var(--material-subtle);
+  color: var(--ink);
+}
+
+.language-toggle:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.24);
+  outline-offset: 3px;
 }
 
 .nav-links a:hover {
@@ -1313,6 +1341,7 @@ h1 span {
   }
 
   .brand,
+  .language-toggle,
   .nav-action {
     flex: 0 0 auto;
   }
@@ -1431,6 +1460,12 @@ h1 span {
   .nav-action {
     min-height: 34px;
     padding: 0 9px;
+    font-size: 12px;
+  }
+
+  .language-toggle {
+    min-height: 34px;
+    padding: 0 8px;
     font-size: 12px;
   }
 
