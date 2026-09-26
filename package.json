@@ -2,21 +2,16 @@
   "name": "Chanwoo-Park-Cover-Letter",
   "version": "1.0.0",
   "type": "module",
-  "description": "Chanwoo Park Cover Letter (Powered by Liquid Glass Engine)",
-  "main": "dist/liquid-glass.js",
-  "module": "dist/liquid-glass.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "description": "Chanwoo Park software engineering portfolio powered by Prism Glass",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:lib": "vite build --config vite.lib.config.ts",
     "preview": "vite preview --port 4173",
     "typecheck": "tsc --noEmit",
-    "test:auto-profile": "npm run build:lib && node tests/auto-profile.mjs && node tests/auto-quality.mjs",
-    "test": "npm run typecheck && npm run test:auto-profile"
+    "test": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "@meapri/prism-glass": "file:vendor/meapri-prism-glass-0.5.0-alpha.2.tgz"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

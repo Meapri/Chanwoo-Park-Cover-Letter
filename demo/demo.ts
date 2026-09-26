@@ -1,5 +1,12 @@
-import { LiquidGlass } from '../src';
-import type { LiquidGlassOptions } from '../src';
+import {
+  createGlass,
+  resolveGlassSurface,
+  type GlassController,
+  type GlassDiagnostics,
+  type GlassMaterial,
+  type GlassSurfacePreset,
+} from '@meapri/prism-glass';
+import '@meapri/prism-glass/styles.css';
 import {
   EN_TRANSLATIONS,
   LANGUAGE_STORAGE_KEY,
@@ -7,16 +14,11 @@ import {
   type SupportedLanguage,
 } from './i18n';
 
-interface GlassConfig extends LiquidGlassOptions {}
-
 const loadingScreen = document.querySelector<HTMLElement>('[data-loading-screen]');
 const loadingStatus = loadingScreen?.querySelector<HTMLElement>('[data-loading-status]');
-const chromiumLike =
-  typeof navigator !== 'undefined' &&
-  /\b(?:Chrome|Chromium|Edg|OPR|SamsungBrowser)\//.test(navigator.userAgent);
 
 if (loadingStatus) {
-  loadingStatus.textContent = chromiumLike ? 'Chromium 기반 환경 확인' : 'Chrome 또는 Edge 권장';
+  loadingStatus.textContent = 'Prism Glass 렌더링 준비 중';
 }
 
 const translationDictionary: Record<string, string> = EN_TRANSLATIONS;
@@ -213,37 +215,145 @@ function setupLanguageToggle(): void {
 
 setupLanguageToggle();
 
-const autoChipGlass: LiquidGlassOptions = {
-  profile: 'control',
-  preset: 'vivid',
-  scheme: 'light',
-  radius: 'pill',
-  refraction: 54,
-  thickness: 48,
-};
+const rgba = ([red, green, blue, alpha]: readonly number[]): string =>
+  `rgb(${Math.round(red * 255)} ${Math.round(green * 255)} ${Math.round(blue * 255)} / ${alpha})`;
 
-const autoControlGlass: LiquidGlassOptions = {
-  profile: 'auto',
-  preset: 'auto',
-  scheme: 'light',
-  radius: 'pill',
-};
-
-function ensureGlass(el: HTMLElement, config: LiquidGlassOptions): void {
-  el.classList.add('liquid-glass');
-  el.dataset.glass ||= JSON.stringify(config);
+function presetFor(element: HTMLElement): GlassSurfacePreset {
+  if (element.matches('.site-nav')) return 'navigation';
+  if (element.matches('.stack-cloud li, .tag-row li')) return 'chip';
+  if (element.matches('a, button, .project-detail-link, .detail-action')) return 'button';
+  if (element.matches('.intro-strip')) return 'toolbar';
+  if (element.matches('.hero-panel, .project-detail-card, .contact-section')) return 'sheet';
+  if (element.matches('.project-card, .evidence-panel, .capability-grid')) return 'popover';
+  return 'popover';
 }
 
-for (const el of Array.from(
-  document.querySelectorAll<HTMLElement>('.nav-action, .language-toggle, .hero-actions .secondary-action, .detail-back-link')
+function writeMaterial(element: HTMLElement, material: GlassMaterial, elevation: number): void {
+  const prominent = element.matches('.primary-action, .nav-action');
+  element.style.setProperty('--prism-fill', prominent ? 'rgb(37 99 235 / .54)' : rgba(material.tint));
+  element.style.setProperty('--prism-solid', prominent ? '#2563eb' : material.opaque);
+  element.style.setProperty('--prism-ink', prominent ? '#ffffff' : material.foreground);
+  element.style.setProperty('--prism-rim', `rgb(255 255 255 / ${Math.max(0.2, material.highlight)})`);
+  element.style.setProperty('--prism-elevation', String(elevation));
+  element.dataset.appearance = material.appearance;
+  element.dataset.variant = material.variant;
+}
+
+function applyMaterialSurface(element: HTMLElement, preset = presetFor(element)): void {
+  const bounds = element.getBoundingClientRect();
+  const resolved = resolveGlassSurface(preset, {
+    width: Math.max(1, bounds.width),
+    height: Math.max(1, bounds.height),
+    radius: Math.max(1, Math.min(bounds.height / 2, Number.parseFloat(getComputedStyle(element).borderRadius) || 28)),
+  });
+  element.classList.remove('liquid-glass');
+  element.classList.add('prism-material', 'prism-portfolio-surface');
+  element.dataset.preset = preset;
+  element.dataset.prismRenderer ||= 'css-material';
+  writeMaterial(element, resolved.material, resolved.elevation);
+  if (!element.querySelector(':scope > .prism-lens')) {
+    const lens = document.createElement('span');
+    lens.className = 'prism-lens';
+    lens.setAttribute('aria-hidden', 'true');
+    element.prepend(lens);
+  }
+}
+
+for (const element of Array.from(document.querySelectorAll<HTMLElement>('[data-prism-surface]'))) {
+  applyMaterialSurface(element);
+}
+
+for (const element of Array.from(
+  document.querySelectorAll<HTMLElement>('.nav-action, .language-toggle, .hero-actions .secondary-action, .detail-back-link, .stack-cloud li')
 )) {
-  ensureGlass(el, autoControlGlass);
-  el.classList.add('lg-interactive');
+  applyMaterialSurface(element);
 }
 
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('.stack-cloud li'))) {
-  ensureGlass(el, autoChipGlass);
+function createViewportSource(): HTMLElement {
+  const header = document.querySelector<HTMLElement>('.site-nav');
+  if (!header) throw new Error('The portfolio header is required');
+  const source = document.createElement('div');
+  source.className = 'prism-scroll-source';
+  source.dataset.prismSource = 'viewport';
+  header.before(source);
+  for (const selector of ['.background-scene', 'main', '.site-footer']) {
+    const node = document.querySelector<HTMLElement>(selector);
+    if (node) source.append(node);
+  }
+  return source;
 }
+
+function restoreHashPosition(): void {
+  const scrollToHash = (): void => {
+    const hash = decodeURIComponent(window.location.hash.slice(1));
+    if (!hash) return;
+    document.getElementById(hash)?.scrollIntoView({ block: 'start' });
+  };
+  for (const link of Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'))) {
+    link.addEventListener('click', (event) => {
+      const id = decodeURIComponent(link.hash.slice(1));
+      const target = id ? document.getElementById(id) : null;
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', link.hash);
+    });
+  }
+  window.addEventListener('hashchange', scrollToHash);
+  requestAnimationFrame(scrollToHash);
+}
+
+function mountHeaderRefraction(source: HTMLElement): GlassController {
+  const header = document.querySelector<HTMLElement>('.site-nav');
+  if (!header) throw new Error('The portfolio header is required');
+  applyMaterialSurface(header, 'navigation');
+
+  const readSurface = () => {
+    const headerBounds = header.getBoundingClientRect();
+    const sourceBounds = source.getBoundingClientRect();
+    return resolveGlassSurface('navigation', {
+      x: headerBounds.left - sourceBounds.left,
+      y: headerBounds.top - sourceBounds.top,
+      width: headerBounds.width,
+      height: headerBounds.height,
+      shape: 'capsule',
+      radius: headerBounds.height / 2,
+    });
+  };
+  const first = readSurface();
+  writeMaterial(header, first.material, first.elevation);
+  const status = (diagnostics: GlassDiagnostics): void => {
+    header.dataset.prismSourceState = diagnostics.state;
+    header.dataset.prismSourceReason = diagnostics.reason;
+    source.dataset.prismState = diagnostics.state;
+    if (diagnostics.state === 'ready') header.dataset.prismRenderer = diagnostics.renderer;
+    else header.dataset.prismRenderer = 'css-material';
+  };
+  const controller = createGlass(source, {
+    ...first.optics,
+    resolution: 512,
+    maxSourcePixels: 16_000_000,
+    onStatus: status,
+  });
+  const updateGeometry = (): void => {
+    const next = readSurface();
+    writeMaterial(header, next.material, next.elevation);
+    controller.update(next.optics);
+  };
+  const resize = new ResizeObserver(updateGeometry);
+  resize.observe(header);
+  resize.observe(source);
+
+  window.addEventListener('beforeunload', () => {
+    resize.disconnect();
+    controller.destroy();
+  }, { once: true });
+  return controller;
+}
+
+const viewportSource = createViewportSource();
+restoreHashPosition();
+const headerGlass = mountHeaderRefraction(viewportSource);
 
 for (const card of Array.from(document.querySelectorAll<HTMLElement>('[data-detail-href]'))) {
   card.setAttribute('role', 'link');
@@ -261,31 +371,15 @@ for (const card of Array.from(document.querySelectorAll<HTMLElement>('[data-deta
   });
 }
 
-// Auto-apply LiquidGlass to every element with [data-glass]
-const instances = new Map<HTMLElement, LiquidGlass>();
-for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-glass]'))) {
-  const raw = el.dataset.glass ?? '{}';
-  let config: GlassConfig = {};
-  try {
-    config = JSON.parse(raw) as GlassConfig;
-  } catch (e) {
-    console.warn('Bad data-glass JSON on', el, e);
-  }
-  instances.set(el, new LiquidGlass(el, config));
-}
-
-// Dynamic Background Observer removed as requested
-
-// Expose for ad-hoc debugging from devtools
 declare global {
   interface Window {
-    __liquidGlass: {
-      instances: Map<HTMLElement, LiquidGlass>;
-      LiquidGlass: typeof LiquidGlass;
+    __prismGlass: {
+      source: HTMLElement;
+      header: GlassController;
     };
   }
 }
-window.__liquidGlass = { instances, LiquidGlass };
+window.__prismGlass = { source: viewportSource, header: headerGlass };
 
 function hideLoadingScreen(): void {
   if (!loadingScreen) return;
