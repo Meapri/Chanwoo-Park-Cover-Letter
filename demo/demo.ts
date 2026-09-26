@@ -1,11 +1,17 @@
 import {
-  createGlass,
+  bindGlassInteraction,
   resolveGlassSurface,
-  type GlassController,
-  type GlassDiagnostics,
+  type GlassInteraction,
+  type GlassInteractionController,
   type GlassMaterial,
   type GlassSurfacePreset,
 } from '@meapri/prism-glass';
+import {
+  createMediaGlass,
+  type MediaGlassController,
+  type MediaGlassDiagnostics,
+  type MediaLens,
+} from '@meapri/prism-glass/media';
 import '@meapri/prism-glass/styles.css';
 import {
   EN_TRANSLATIONS,
@@ -245,11 +251,11 @@ function applyMaterialSurface(element: HTMLElement, preset = presetFor(element))
     width: Math.max(1, bounds.width),
     height: Math.max(1, bounds.height),
     radius: Math.max(1, Math.min(bounds.height / 2, Number.parseFloat(getComputedStyle(element).borderRadius) || 28)),
-  });
+  }, { variant: 'clear', appearance: 'light' });
   element.classList.remove('liquid-glass');
   element.classList.add('prism-material', 'prism-portfolio-surface');
   element.dataset.preset = preset;
-  element.dataset.prismRenderer ||= 'css-material';
+  element.dataset.prismRenderer = element.parentElement?.closest('.prism-portfolio-surface') ? 'overlay' : 'pending';
   writeMaterial(element, resolved.material, resolved.elevation);
   if (!element.querySelector(':scope > .prism-lens')) {
     const lens = document.createElement('span');
@@ -283,6 +289,139 @@ function createViewportSource(): HTMLElement {
   return source;
 }
 
+function prepareMediaSource(source: HTMLElement): HTMLImageElement {
+  const existing = source.querySelector<HTMLElement>('.scene-image');
+  if (existing instanceof HTMLImageElement) return existing;
+
+  const image = document.createElement('img');
+  image.className = 'scene-image';
+  image.alt = '';
+  image.decoding = 'async';
+  image.src = new URL('./assets/liquid-workstation.png', import.meta.url).href;
+  existing?.replaceWith(image);
+  return image;
+}
+
+function mountClearGlassScene(source: HTMLElement): MediaGlassController {
+  const image = prepareMediaSource(source);
+  const canvas = document.createElement('canvas');
+  canvas.className = 'prism-page-media-canvas';
+  canvas.setAttribute('aria-hidden', 'true');
+  source.querySelector('.background-scene')?.after(canvas);
+
+  const surfaces = Array.from(
+    document.querySelectorAll<HTMLElement>('.prism-portfolio-surface[data-prism-renderer="pending"]')
+  );
+  surfaces.forEach((element, index) => {
+    element.dataset.prismLensId = `portfolio-${index + 1}`;
+  });
+  const interactions = new Map<HTMLElement, GlassInteraction>();
+  const interactionControllers: GlassInteractionController[] = [];
+
+  const readLenses = (): MediaLens[] => {
+    const canvasBounds = canvas.getBoundingClientRect();
+    const viewportWidth = canvasBounds.width;
+    const viewportHeight = canvasBounds.height;
+    return surfaces.flatMap((element): MediaLens[] => {
+      const bounds = element.getBoundingClientRect();
+      if (
+        !bounds.width ||
+        !bounds.height ||
+        bounds.right <= 0 ||
+        bounds.bottom <= 0 ||
+        bounds.left >= viewportWidth ||
+        bounds.top >= viewportHeight
+      ) return [];
+
+      const preset = (element.dataset.preset ?? presetFor(element)) as GlassSurfacePreset;
+      const compact = bounds.height <= 96 && element.matches('.site-nav, a, button, li');
+      const largeSurface = bounds.width * bounds.height >= 40_000;
+      const resolved = resolveGlassSurface(preset, {
+        width: bounds.width,
+        height: bounds.height,
+        shape: compact ? 'capsule' : 'continuous',
+        radius: Math.max(1, Math.min(bounds.height / 2, Number.parseFloat(getComputedStyle(element).borderRadius) || 28)),
+      }, { variant: 'clear', appearance: 'light' });
+      const prominent = element.matches('.primary-action, .nav-action');
+      const interaction = interactions.get(element);
+      return [{
+        id: element.dataset.prismLensId ?? preset,
+        lens: {
+          ...resolved.lens,
+          x: bounds.left - canvasBounds.left,
+          y: bounds.top - canvasBounds.top,
+        },
+        preset,
+        variant: 'clear',
+        appearance: 'light',
+        tint: prominent ? [0.15, 0.38, 0.92, 0.13] : [1, 1, 1, 0.035],
+        dimming: prominent ? 0.14 : 0.2,
+        strength: largeSurface ? 28 : undefined,
+        chroma: largeSurface ? 0.28 : 0.55,
+        press: interaction?.press ?? 0,
+        hover: interaction?.hover ?? 0,
+        pointer: interaction?.pointer ?? [0.5, 0.5],
+      }];
+    });
+  };
+
+  const status = (diagnostics: MediaGlassDiagnostics): void => {
+    canvas.dataset.prismState = diagnostics.state;
+    canvas.dataset.prismReason = diagnostics.reason;
+    source.dataset.prismState = diagnostics.state;
+    const renderer = diagnostics.state === 'ready' ? 'webgl-media' : 'css-material';
+    for (const element of surfaces) element.dataset.prismRenderer = renderer;
+    const header = document.querySelector<HTMLElement>('.site-nav');
+    if (header) {
+      header.dataset.prismSourceState = diagnostics.state;
+      header.dataset.prismSourceReason = diagnostics.reason;
+    }
+  };
+
+  const controller = createMediaGlass(canvas, image, {
+    lenses: readLenses(),
+    fit: 'cover',
+    sourceAlignment: 'element',
+    resolution: 1024,
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 3),
+    maxPixels: 4_000_000,
+    backgroundColor: [0.93, 0.96, 0.98],
+    onStatus: status,
+  });
+
+  let frame = 0;
+  const schedule = (): void => {
+    if (frame) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = 0;
+      controller.setLenses(readLenses());
+    });
+  };
+  const resize = new ResizeObserver(schedule);
+  resize.observe(canvas);
+  for (const element of surfaces) {
+    resize.observe(element);
+    interactionControllers.push(bindGlassInteraction(element, (interaction) => {
+      interactions.set(element, interaction);
+      schedule();
+    }));
+  }
+  source.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  image.addEventListener('load', () => controller.refresh(), { once: true });
+
+  window.addEventListener('beforeunload', () => {
+    if (frame) window.cancelAnimationFrame(frame);
+    resize.disconnect();
+    for (const interaction of interactionControllers) interaction.destroy();
+    source.removeEventListener('scroll', schedule);
+    window.removeEventListener('resize', schedule);
+    controller.destroy();
+  }, { once: true });
+
+  return controller;
+}
+
 function restoreHashPosition(): void {
   const scrollToHash = (): void => {
     const hash = decodeURIComponent(window.location.hash.slice(1));
@@ -303,68 +442,9 @@ function restoreHashPosition(): void {
   requestAnimationFrame(scrollToHash);
 }
 
-function mountHeaderRefraction(source: HTMLElement): GlassController {
-  const header = document.querySelector<HTMLElement>('.site-nav');
-  if (!header) throw new Error('The portfolio header is required');
-  applyMaterialSurface(header, 'navigation');
-  const mobileWebKit = /AppleWebKit/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
-  if (mobileWebKit) header.dataset.prismMobileOptics = 'webkit';
-
-  const readSurface = () => {
-    const headerBounds = header.getBoundingClientRect();
-    const sourceBounds = source.getBoundingClientRect();
-    const resolved = resolveGlassSurface('navigation', {
-      x: headerBounds.left - sourceBounds.left,
-      y: headerBounds.top - sourceBounds.top,
-      width: headerBounds.width,
-      height: headerBounds.height,
-      shape: 'capsule',
-      radius: headerBounds.height / 2,
-    });
-    if (mobileWebKit) {
-      resolved.optics.surface = 'dome';
-      resolved.optics.strength = Math.max(34, resolved.optics.strength ?? 0);
-      resolved.optics.depth = Math.max(1.1, resolved.optics.depth ?? 0);
-      resolved.optics.curvature = Math.min(3.6, resolved.optics.curvature ?? 3.6);
-      resolved.optics.highlight = Math.max(0.66, resolved.optics.highlight ?? 0);
-    }
-    return resolved;
-  };
-  const first = readSurface();
-  writeMaterial(header, first.material, first.elevation);
-  const status = (diagnostics: GlassDiagnostics): void => {
-    header.dataset.prismSourceState = diagnostics.state;
-    header.dataset.prismSourceReason = diagnostics.reason;
-    source.dataset.prismState = diagnostics.state;
-    if (diagnostics.state === 'ready') header.dataset.prismRenderer = diagnostics.renderer;
-    else header.dataset.prismRenderer = 'css-material';
-  };
-  const controller = createGlass(source, {
-    ...first.optics,
-    resolution: 512,
-    maxSourcePixels: 16_000_000,
-    refreshFilterId: mobileWebKit ? 'always' : 'auto',
-    onStatus: status,
-  });
-  const updateGeometry = (): void => {
-    const next = readSurface();
-    writeMaterial(header, next.material, next.elevation);
-    controller.update(next.optics);
-  };
-  const resize = new ResizeObserver(updateGeometry);
-  resize.observe(header);
-  resize.observe(source);
-
-  window.addEventListener('beforeunload', () => {
-    resize.disconnect();
-    controller.destroy();
-  }, { once: true });
-  return controller;
-}
-
 const viewportSource = createViewportSource();
 restoreHashPosition();
-const headerGlass = mountHeaderRefraction(viewportSource);
+const mediaGlass = mountClearGlassScene(viewportSource);
 
 for (const card of Array.from(document.querySelectorAll<HTMLElement>('[data-detail-href]'))) {
   card.setAttribute('role', 'link');
@@ -385,12 +465,17 @@ for (const card of Array.from(document.querySelectorAll<HTMLElement>('[data-deta
 declare global {
   interface Window {
     __prismGlass: {
-      source: HTMLElement;
-      header: GlassController;
+      source: HTMLImageElement;
+      canvas: HTMLCanvasElement;
+      media: MediaGlassController;
     };
   }
 }
-window.__prismGlass = { source: viewportSource, header: headerGlass };
+window.__prismGlass = {
+  source: viewportSource.querySelector<HTMLImageElement>('.scene-image')!,
+  canvas: viewportSource.querySelector<HTMLCanvasElement>('.prism-page-media-canvas')!,
+  media: mediaGlass,
+};
 
 function hideLoadingScreen(): void {
   if (!loadingScreen) return;
