@@ -1,6 +1,7 @@
 # Prism Glass integration guidelines
 
 - 실제 굴절에는 명시적인 원본이 필요합니다. 포트폴리오는 `.scene-image`를 공유 media source로 사용합니다.
+- media source와 canvas는 스크롤 컨테이너 밖의 같은 고정 viewport 좌표계에 둡니다. 스크롤할 때 두 레이어를 이동하거나 재부모화하지 마세요.
 - 헤더·카드·패널·독립 버튼은 하나의 `.prism-page-media-canvas`에 Clear 렌즈로 등록합니다.
 - 텍스트와 상호작용 요소는 canvas 위의 일반 HTML 전경에 두어 읽기와 키보드·포인터 동작을 보존합니다.
 - Clear 표면 안의 버튼과 칩은 중첩 렌즈를 추가하지 않고 `overlay` 재질을 사용합니다.

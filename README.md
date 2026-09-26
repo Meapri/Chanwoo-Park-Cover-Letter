@@ -61,6 +61,7 @@ npm test
 
 `npm test`는 타입 검사와 13개 라우트의 production build를 수행합니다. 렌더링 QA에서는 다음 동작도 확인해야 합니다.
 
+- `.background-scene`과 `.prism-page-media-canvas`는 스크롤 컨테이너 밖의 고정 형제 레이어이며, `main`과 footer만 `.prism-scroll-source` 안에서 이동
 - `.prism-page-media-canvas[data-prism-state="ready"]`와 `webgl-media-selected`
 - 헤더와 현재 보이는 본문 표면의 `data-variant="clear"`, `data-prism-renderer="webgl-media"`
 - canvas 활성/비활성 비교에서 각 표면 내부 픽셀 변화와 표면 밖 원본 보존

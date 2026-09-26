@@ -282,15 +282,15 @@ function createViewportSource(): HTMLElement {
   source.className = 'prism-scroll-source';
   source.dataset.prismSource = 'viewport';
   header.before(source);
-  for (const selector of ['.background-scene', 'main', '.site-footer']) {
+  for (const selector of ['main', '.site-footer']) {
     const node = document.querySelector<HTMLElement>(selector);
     if (node) source.append(node);
   }
   return source;
 }
 
-function prepareMediaSource(source: HTMLElement): HTMLImageElement {
-  const existing = source.querySelector<HTMLElement>('.scene-image');
+function prepareMediaSource(): HTMLImageElement {
+  const existing = document.querySelector<HTMLElement>('.scene-image');
   if (existing instanceof HTMLImageElement) return existing;
 
   const image = document.createElement('img');
@@ -303,11 +303,11 @@ function prepareMediaSource(source: HTMLElement): HTMLImageElement {
 }
 
 function mountClearGlassScene(source: HTMLElement): MediaGlassController {
-  const image = prepareMediaSource(source);
+  const image = prepareMediaSource();
   const canvas = document.createElement('canvas');
   canvas.className = 'prism-page-media-canvas';
   canvas.setAttribute('aria-hidden', 'true');
-  source.querySelector('.background-scene')?.after(canvas);
+  document.querySelector('.background-scene')?.after(canvas);
 
   const surfaces = Array.from(
     document.querySelectorAll<HTMLElement>('.prism-portfolio-surface[data-prism-renderer="pending"]')
@@ -472,8 +472,8 @@ declare global {
   }
 }
 window.__prismGlass = {
-  source: viewportSource.querySelector<HTMLImageElement>('.scene-image')!,
-  canvas: viewportSource.querySelector<HTMLCanvasElement>('.prism-page-media-canvas')!,
+  source: document.querySelector<HTMLImageElement>('.scene-image')!,
+  canvas: document.querySelector<HTMLCanvasElement>('.prism-page-media-canvas')!,
   media: mediaGlass,
 };
 
