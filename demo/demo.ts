@@ -307,11 +307,13 @@ function mountHeaderRefraction(source: HTMLElement): GlassController {
   const header = document.querySelector<HTMLElement>('.site-nav');
   if (!header) throw new Error('The portfolio header is required');
   applyMaterialSurface(header, 'navigation');
+  const mobileWebKit = /AppleWebKit/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
+  if (mobileWebKit) header.dataset.prismMobileOptics = 'webkit';
 
   const readSurface = () => {
     const headerBounds = header.getBoundingClientRect();
     const sourceBounds = source.getBoundingClientRect();
-    return resolveGlassSurface('navigation', {
+    const resolved = resolveGlassSurface('navigation', {
       x: headerBounds.left - sourceBounds.left,
       y: headerBounds.top - sourceBounds.top,
       width: headerBounds.width,
@@ -319,6 +321,14 @@ function mountHeaderRefraction(source: HTMLElement): GlassController {
       shape: 'capsule',
       radius: headerBounds.height / 2,
     });
+    if (mobileWebKit) {
+      resolved.optics.surface = 'dome';
+      resolved.optics.strength = Math.max(34, resolved.optics.strength ?? 0);
+      resolved.optics.depth = Math.max(1.1, resolved.optics.depth ?? 0);
+      resolved.optics.curvature = Math.min(3.6, resolved.optics.curvature ?? 3.6);
+      resolved.optics.highlight = Math.max(0.66, resolved.optics.highlight ?? 0);
+    }
+    return resolved;
   };
   const first = readSurface();
   writeMaterial(header, first.material, first.elevation);
@@ -333,6 +343,7 @@ function mountHeaderRefraction(source: HTMLElement): GlassController {
     ...first.optics,
     resolution: 512,
     maxSourcePixels: 16_000_000,
+    refreshFilterId: mobileWebKit ? 'always' : 'auto',
     onStatus: status,
   });
   const updateGeometry = (): void => {

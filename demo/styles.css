@@ -289,8 +289,7 @@ code {
   overflow: hidden;
   pointer-events: none;
   contain: paint;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
+  isolation: isolate;
   background:
     linear-gradient(120deg, rgba(37, 99, 235, 0.08), transparent 22%),
     linear-gradient(230deg, rgba(192, 38, 211, 0.08), transparent 28%),
@@ -305,8 +304,6 @@ code {
   background-position: center top;
   opacity: 0.72;
   filter: saturate(1) contrast(1.03);
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
 }
 
 .scene-grid {
@@ -347,7 +344,12 @@ main,
   overscroll-behavior-y: contain;
   scroll-behavior: smooth;
   background: var(--page-bg);
-  -webkit-overflow-scrolling: touch;
+  /*
+   * Keep the SVG source filter on WebKit's software-rendered path. iOS Safari
+   * silently drops filter: url(...) when the filtered scroller or one of its
+   * visual layers is promoted to the compositor.
+   */
+  -webkit-overflow-scrolling: auto;
 }
 
 .prism-portfolio-surface {
